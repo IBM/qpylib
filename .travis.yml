@@ -29,7 +29,7 @@ jobs:
         - ./test.sh "${BUILD_IMAGE}:${BUILD_TAG}"
     - stage: build-development
       script:
-        - ./build.sh "${BUILD_IMAGE}:${BUILD_TAG}" "${TRAVIS_COMMIT}-dev"
+        - ./build.sh "${TRAVIS_COMMIT}-dev" "${BUILD_IMAGE}:${BUILD_TAG}"
     - stage: build-release
       script:
-        - ./build.sh "${BUILD_IMAGE}:${BUILD_TAG}" "${TRAVIS_TAG}"
+        - ./build.sh "${TRAVIS_TAG}" "${BUILD_IMAGE}:${BUILD_TAG}"
