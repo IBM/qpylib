@@ -33,12 +33,9 @@ jobs:
     - stage: build-release
       script:
         - ./build.sh "${TRAVIS_TAG}" "${BUILD_IMAGE}:${BUILD_TAG}"
-
-deploy:
-  provider: releases
-  api_key:
-    secure: "${GITHUB_OAUTH_TOKEN}"
-  file: "dist/qpylib-${TRAVIS_TAG}.tar.gz"
-  skip_cleanup: true
-  on:
-    tags: true
+      deploy:
+        provider: releases
+        api_key:
+          secure: "${GITHUB_OAUTH_TOKEN}"
+        file: "dist/qpylib-${TRAVIS_TAG}.tar.gz"
+        skip_cleanup: true
