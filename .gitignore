@@ -1,0 +1,12 @@
+.cache
+.project
+.pydevproject
+RemoteSystemsTempFiles
+.*.swp
+*.pyc
+*.log
+build
+dist
+qpylib.egg-info
+.sonarlint
+.vscode
