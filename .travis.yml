@@ -1,0 +1,35 @@
+language: python
+
+env:
+  global:
+    - BUILD_IMAGE="qpylib"
+    - BUILD_TAG="build"
+
+services:
+  - docker
+
+before_install:
+  - docker build -t "${BUILD_IMAGE}":"${BUILD_TAG}" .
+
+stages:
+  - lint
+  - test
+  - name: build-development
+    if: tag IS blank
+  - name: build-release
+    if: tag IS present
+
+jobs:
+  include:
+    - stage: lint
+      script:
+        - ./lint.sh "${BUILD_IMAGE}:${BUILD_TAG}"
+    - stage: test
+      script:
+        - ./test.sh "${BUILD_IMAGE}:${BUILD_TAG}"
+    - stage: build-development
+      script:
+        - ./build.sh "${BUILD_IMAGE}:${BUILD_TAG}" "${TRAVIS_COMMIT}-dev"
+    - stage: build-release
+      script:
+        - ./build.sh "${BUILD_IMAGE}:${BUILD_TAG}" "${TRAVIS_TAG}"
