@@ -39,4 +39,5 @@ jobs:
           secure: "${GITHUB_OAUTH_TOKEN}"
         file: "dist/qpylib-${TRAVIS_TAG}.tar.gz"
         skip_cleanup: true
-        all_branches: true
+        on:
+          all_branches: true
