@@ -23,7 +23,7 @@ function main() {
 	# Build python module in docker container
 	# With the user ID of the host container (avoids file permission issues)
 	docker run -u "$(id -u):$(id -g)" -v "$(pwd)":/qpylib:Z "${DOCKER_IMAGE}" \
-		/bin/bash -c "cd /qpylib && /usr/local/bin/python2.7 setup.py sdist --version=${VERSION}"
+		/bin/bash -c "cd /qpylib && echo ${VERSION} > /qpylib/VERSION && /usr/local/bin/python2.7 setup.py sdist"
 }
 
 main

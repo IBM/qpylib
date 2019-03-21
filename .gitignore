@@ -10,3 +10,4 @@ dist
 qpylib.egg-info
 .sonarlint
 .vscode
+VERSION
