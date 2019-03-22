@@ -11,7 +11,7 @@ from flask import Flask
 from mock import patch
 from werkzeug import http
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'app', 'qpylib')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'qpylib')))
 
 import qpylib
 import live_qpylib

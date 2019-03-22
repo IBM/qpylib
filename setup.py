@@ -5,24 +5,17 @@ SPDX-License-Identifier: Apache-2.0
 
 Handles packaging qpylib
 """
-import sys
-import argparse
 import setuptools
-
 
 def main():
     """
     Main method for building qpylib
     """
-    # Parse command line arguments
-    parser = argparse.ArgumentParser(description="Build qpylib package.")
-    parser.add_argument("build", help="Type of package to build (e.g. sdist).")
-    parser.add_argument("--version", required=True, help="Version of qpylib to build.")
-    # Remove all arguments from argv
-    args, left = parser.parse_known_args()
-    sys.argv = sys.argv[:1]+left
-    # Add the build type back in - this is used by setuptools
-    sys.argv.append(args.build)
+
+    with open("VERSION", "r") as version_file:
+        version = version_file.read()
+
+    version = version.rstrip()
 
     # Read in the README
     with open("README.md", "r") as readme:
@@ -31,11 +24,13 @@ def main():
     # Build the package
     setuptools.setup(
         name="qpylib",
-        version=args.version,
         author="IBM",
-        description="qpylibc",
+        author_email="<>",
+        version=version,
+        description="QRadar app utility library",
         long_description=long_desc,
         long_description_content_type="text/markdown",
+        license='SPDX-License-Identifier: Apache-2.0',
         url="https://github.com/ibm/qpylib",
         packages=setuptools.find_packages(),
         classifiers=[

@@ -18,7 +18,7 @@ function main() {
 	# Run pylint in docker container
 	# With the user ID of the host container (avoids file permission issues)
 	docker run -e PYLINTHOME="/user_home" -u "$(id -u):$(id -g)" -v "$(pwd)":/qpylib:Z "${DOCKER_IMAGE}" \
-		/bin/bash -c "cd /qpylib && /usr/local/bin/python2.7 -m pylint -d C,R -r n --rcfile=.pylintrc app"
+		/bin/bash -c "cd /qpylib && /usr/local/bin/python2.7 -m pylint -d C,R -r n --rcfile=.pylintrc qpylib"
 }
 
 main
