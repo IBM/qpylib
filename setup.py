@@ -25,7 +25,7 @@ def main():
     setuptools.setup(
         name="qpylib",
         author="IBM",
-        author_email="jamie.thompson1@ibm.com",
+        author_email="<>",
         version=version,
         description="QRadar app utility library",
         long_description=long_desc,
