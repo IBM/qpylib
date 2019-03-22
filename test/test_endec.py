@@ -8,7 +8,7 @@ import pytest
 import json
 from mock import patch
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'app', 'qpylib')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'qpylib')))
 
 import qpylib
 import live_qpylib

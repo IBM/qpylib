@@ -15,6 +15,8 @@ def main():
     with open("VERSION", "r") as version_file:
         version = version_file.read()
 
+    version = version.rstrip()
+
     # Read in the README
     with open("README.md", "r") as readme:
         long_desc = readme.read()
