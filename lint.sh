@@ -1,24 +1,9 @@
 #!/bin/bash
 
-# Exit on failure
-set -e
+source ./image.sh "${1}"
 
-DOCKER_IMAGE="${1}"
-DEFAULT_IMAGE="qpylib:build"
+echo "Linting qpylib using docker image ${QPYLIB_DOCKER_IMAGE}"
 
-function main() {
-	# Run pylint
-	if [ -z "${DOCKER_IMAGE}" ]; then
-		echo "No docker image provided, building default"
-		docker build -t "${DEFAULT_IMAGE}" .
-		DOCKER_IMAGE="${DEFAULT_IMAGE}"
-	fi
-	echo "Linting qpylib"
-	# Run docker image
-	# Run pylint in docker container
-	# With the user ID of the host container (avoids file permission issues)
-	docker run -e PYLINTHOME="/user_home" -u "$(id -u):$(id -g)" -v "$(pwd)":/qpylib:Z "${DOCKER_IMAGE}" \
-		/bin/bash -c "cd /qpylib && /usr/local/bin/python2.7 -m pylint -d C,R -r n --rcfile=.pylintrc qpylib"
-}
+QPYLIB_PYLINT_CMD="cd /qpylib && python -m pylint -d C,R -r n --rcfile=.pylintrc qpylib test/*.py"
 
-main
+./run_with_docker.sh ${QPYLIB_DOCKER_IMAGE} "${QPYLIB_PYLINT_CMD}"

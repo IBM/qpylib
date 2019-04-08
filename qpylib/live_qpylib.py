@@ -1,31 +1,26 @@
-#!/usr/bin/python
-
 # Copyright 2019 IBM Corporation All Rights Reserved.
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from abstract_qpylib import AbstractQpylib
-from logging.handlers import RotatingFileHandler, SysLogHandler
+from .abstract_qpylib import AbstractQpylib
+from flask import request, has_request_context
 from logging import Formatter
-from flask import request
-from flask import has_request_context
-import socket
+from logging.handlers import RotatingFileHandler, SysLogHandler
 import os
+from socket import gethostbyname, gethostname
 
-MANIFEST_LOCATION = 'app/manifest.json'
 LOGFILE_LOCATION = '/store/log/app.log'
 APP_CERT_LOCATION = '/etc/pki/tls/certs/ca-bundle.crt'
 
 class LiveQpylib(AbstractQpylib):
 
     def get_manifest_location(self):
-        global MANIFEST_LOCATION
-        return MANIFEST_LOCATION
+        return 'app/manifest.json'
 
     def get_console_address(self):
         manifest = self.get_manifest_json()
         console_ip = ''
-        if 'console_ip' not in manifest:
+        if 'console_ip' not in manifest.keys():
             self.log('console not defined in manifest - default to localhost', level='error')
             console_ip = '127.0.0.1'
         else:
@@ -59,7 +54,7 @@ class LiveQpylib(AbstractQpylib):
             headers['Version'] = version
 
         if headers.get('Host') is None:
-            headers['Host'] = socket.gethostbyname(socket.gethostname())
+            headers['Host'] = gethostbyname(gethostname())
 
         if has_request_context():
             if csrf_cookie in request.cookies.keys():
@@ -111,14 +106,14 @@ class LiveQpylib(AbstractQpylib):
         else:
             fullURL = "https://" + self.get_console_address() + "/" + requestURL
 
-        if os.path.isfile( '/store/consolecert.pem' ):
+        if os.path.isfile('/store/consolecert.pem'):
             # if /store/consolecert.pem exists then we need to pass it 
             # to be able to communicate with console
             verify = '/store/consolecert.pem'
         else:
             # If the verify value isn't a string - i.e. True, False or None
             # retrieve the cert file location to try and ensure all REST requests use SSL.
-            if not isinstance(verify, basestring):
+            if not isinstance(verify, str):
                 verify = self.get_cert_filepath()
 
         self.log("REST=" + fullURL +

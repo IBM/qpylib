@@ -1,11 +1,9 @@
-#!/usr/bin/python
-
 # Copyright 2019 IBM Corporation All Rights Reserved.
 #
 # SPDX-License-Identifier: Apache-2.0
 
-import qpylib
-import json_qpylib
+from . import json_qpylib
+from . import qpylib
 
 # Context location yet to be finalised.
 JSON_LD_CONTEXT = 'http://qradar/context/location'

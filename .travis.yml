@@ -4,12 +4,14 @@ env:
   global:
     - BUILD_IMAGE="qpylib"
     - BUILD_TAG="build"
+    - PYTHON_VERSION_LONG="3.7.3"
+    - PYTHON_VERSION_SHORT="3.7"
 
 services:
   - docker
 
 before_install:
-  - docker build -t "${BUILD_IMAGE}":"${BUILD_TAG}" .
+  - ./build_image.sh "${PYTHON_VERSION_LONG}" "${PYTHON_VERSION_SHORT}" "${BUILD_IMAGE}:${BUILD_TAG}"
 
 stages:
   - lint
