@@ -1,11 +1,10 @@
-#!/usr/bin/python
-
 # Copyright 2019 IBM Corporation All Rights Reserved.
 #
 # SPDX-License-Identifier: Apache-2.0
 
 import os
-from live_qpylib import LiveQpylib
+from .live_qpylib import LiveQpylib
+from .sdk_qpylib import SdkQpylib
 
 # ===== SDK specifics =====
 
@@ -15,7 +14,6 @@ def is_sdk():
 
 def strategy():
     if is_sdk():
-        from sdk_qpylib import SdkQpylib
         return SdkQpylib()
     return LiveQpylib()
 

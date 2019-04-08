@@ -1,26 +1,22 @@
-#!/usr/bin/python
-
 # Copyright 2019 IBM Corporation All Rights Reserved.
 #
 # SPDX-License-Identifier: Apache-2.0
 
 from abc import ABCMeta, abstractmethod
-import os
-import requests
-import logging
 from flask import url_for
-import offense_qpylib
-import asset_qpylib
-import json_qpylib
 import json
+import logging
+import requests
+import os
+from . import asset_qpylib
+from . import json_qpylib
+from . import offense_qpylib
 
-loggerName = 'com.ibm.applicationLogger'
+LOGGER_NAME = 'com.ibm.applicationLogger'
 logger = 0
 cached_manifest = None
 
-class AbstractQpylib(object):
-    __metaclass__ = ABCMeta
-
+class AbstractQpylib(object, metaclass=ABCMeta):
     @abstractmethod
     def get_app_id(self):
         pass
@@ -102,7 +98,7 @@ class AbstractQpylib(object):
 
     def choose_log_level(self, level='INFO'):
         if logger == 0:
-            raise SystemError('You can not call log before logging has been initialised')
+            raise SystemError('You cannot call log before logging has been initialised')
 
         level = level.upper()
         return {
@@ -130,13 +126,20 @@ class AbstractQpylib(object):
 
     def create_log(self):
         global logger
-        global loggerName
-        logger = logging.getLogger(loggerName)
+        global LOGGER_NAME
+        logger = logging.getLogger(LOGGER_NAME)
         self.add_log_handler(logger)
-        self.log("Created log " + loggerName, 'info')
+        self.log("Created log " + LOGGER_NAME, 'info')
 
     def set_log_level(self, log_level='INFO'):
         logger.setLevel(self.map_log_level(log_level))
+
+    def log(self, message, level='info'):
+        log_fn = self.choose_log_level(level)
+        log_fn("127.0.0.1 " +
+               "[APP_ID/" +  self.get_app_id() + "]" +
+               "[NOT:" +  self.map_notification_code(level) + "] " +
+               message)
 
     @abstractmethod
     def get_console_address(self):
@@ -170,7 +173,7 @@ class AbstractQpylib(object):
         """
         if isinstance(python_obj, dict):
             data = {}
-            for (k, v) in python_obj.items():
+            for (k, v) in list(python_obj.items()):
                 data[k] = self.to_json_dict(v, classkey)
             return data
         elif hasattr(python_obj, "_ast"):
@@ -179,7 +182,7 @@ class AbstractQpylib(object):
             return [self.to_json_dict(v, classkey) for v in python_obj]
         elif hasattr(python_obj, "__dict__"):
             data = dict([(key, self.to_json_dict(value, classkey))
-                         for key, value in python_obj.__dict__.iteritems()
+                         for key, value in python_obj.__dict__.items()
                          if not callable(value) and not key.startswith('_')])
             if classkey is not None and hasattr(python_obj, "__class__"):
                 data[classkey] = python_obj.__class__.__name__
@@ -210,13 +213,6 @@ class AbstractQpylib(object):
             'WARNING': "0000004000",
             'CRITICAL': "0000003000",
         }.get(log_level, "0000006000")
-
-    def log(self, message,  level='info'):
-        log_fn = self.choose_log_level(level)
-        log_fn("127.0.0.1 " +
-               "[APP_ID/" +  self.get_app_id() + "]" +
-               "[NOT:" +  self.map_notification_code(level) + "] " +
-               message)
 
     def register_jsonld_type(self, context):
         if context is not None:

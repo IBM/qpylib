@@ -1,28 +1,24 @@
-#!/usr/bin/python
-
 # Copyright 2019 IBM Corporation All Rights Reserved.
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from abstract_qpylib import AbstractQpylib
-import json
-import os
-import os.path
-import sys
-import getpass
-import logging
-import requests
+from .abstract_qpylib import AbstractQpylib
+from collections.abc import Iterable
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
+import getpass
+import json
+import logging
+import os
+import requests
+import socket
 import ssl
+import sys
 import unicodedata
-import collections
+from OpenSSL.crypto import dump_certificate, FILETYPE_PEM
 from OpenSSL.SSL import (Context, Connection)
 from OpenSSL.SSL import SSLv23_METHOD
-from OpenSSL.crypto import dump_certificate
-from OpenSSL.crypto import FILETYPE_PEM
-import socket
 
 DEV_AUTH_FILE = ".qradar_appfw.auth"
 DEV_CONSOLE_FILE = ".qradar_appfw.console"
@@ -38,13 +34,10 @@ api_auth_password = 0
 consoleIP = 0
 handler_added = 0
 
-manifest_location = 'manifest.json'
-
 class SdkQpylib(AbstractQpylib):
 
     def get_manifest_location(self):
-        global manifest_location
-        return manifest_location
+        return 'manifest.json'
 
     def get_app_id(self):
         return "DEV_APP"
@@ -63,7 +56,7 @@ class SdkQpylib(AbstractQpylib):
             try:
                 with open(console_cert_file_path) as pem_file:
                     pem_text = pem_file.read()
-                    x509.load_pem_x509_certificate(pem_text, default_backend())
+                    x509.load_pem_x509_certificate(pem_text.encode(), default_backend())
                 print("Using console cert from file: " + str(console_cert_file_path))
                 sys.stdout.flush()
                 return console_cert_file_path
@@ -90,21 +83,21 @@ class SdkQpylib(AbstractQpylib):
             pem_text = self.normalize_pem_data(pem_data)
             intermediate_pem_data = requests.get(url = INTERMEDIATE_PEM_URL.format(host, VAULT_PORT)).text
             intermediate_pem_text = self.normalize_pem_data(intermediate_pem_data)
-        except requests.exceptions.ConnectionError:
+        except requests.ConnectionError:
             use_pre_732_cert = True
             pem_data = ssl.get_server_certificate((host, 443))
             pem_text = self.normalize_pem_data(pem_data)
             
-        print ''
-        print '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
-        print 'Server ' + host + ' is unknown, do you want to trust it?'
-        print '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
-        print ''
+        print('')
+        print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
+        print('Server ' + host + ' is unknown, do you want to trust it?')
+        print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
+        print('')
         self.display_pem_cert_details(pem_text)
         print("Do you trust this certificate [y/n]: ")
         sys.stdout.flush()
 
-        do_store = raw_input().strip().lower()
+        do_store = input().strip().lower()
         if do_store not in YES_OPTIONS:
             print("Not storing cert file for {0}. Aborting request.".format(host))
             sys.stdout.flush()
@@ -118,8 +111,8 @@ class SdkQpylib(AbstractQpylib):
                 self.dump_all_certs(cert_file, host)
         else:
             with open(console_cert_file_path, "a") as cert_file:
-                cert_file.write(pem_text)
-                cert_file.write(intermediate_pem_text)
+                cert_file.write(pem_text.decode())
+                cert_file.write(intermediate_pem_text.decode())
 
     def dump_all_certs(self, cert_file, address):
         # This will also include intermediate certs
@@ -132,7 +125,7 @@ class SdkQpylib(AbstractQpylib):
         clientSSL.do_handshake()
         chains = clientSSL.get_peer_cert_chain()
         for chain in chains:
-            cert_file.write(dump_certificate(FILETYPE_PEM, chain))
+            cert_file.write(dump_certificate(FILETYPE_PEM, chain).decode())
 
     _name_fields = [
         'OID_COMMON_NAME',
@@ -154,19 +147,19 @@ class SdkQpylib(AbstractQpylib):
 
     def display_pem_cert_details(self, pem_text):
         pem_cert = x509.load_pem_x509_certificate(pem_text, default_backend())
-        print ('********************')
-        print ('Certificate details:')
-        print ('********************')
-        print ('Version: {}'.format(pem_cert.version))
-        print 'SHA-256 Fingerprint: ',
-        print (":".join("%02x" % ord(b) for b in pem_cert.fingerprint(hashes.SHA256())))
-        print 'SHA1 Fingerprint: ',
-        print (":".join("%02x" % ord(b) for b in pem_cert.fingerprint(hashes.SHA1())))
-        print 'Serial Number: {}'.format(self.int_to_delim_hex(':', pem_cert.serial_number))
-        print 'Not valid before: {}'.format(pem_cert.not_valid_before)
-        print 'Not valid after: {}'.format(pem_cert.not_valid_after)
+        print('********************')
+        print('Certificate details:')
+        print('********************')
+        print('Version: {}'.format(pem_cert.version))
+        print('SHA-256 Fingerprint: ')
+        print("%02x" % b for b in pem_cert.fingerprint(hashes.SHA256()))
+        print('SHA1 Fingerprint: ')
+        print("%02x" % b for b in pem_cert.fingerprint(hashes.SHA1()))
+        print('Serial Number: {}'.format(self.int_to_delim_hex(':', pem_cert.serial_number)))
+        print('Not valid before: {}'.format(pem_cert.not_valid_before))
+        print('Not valid after: {}'.format(pem_cert.not_valid_after))
 
-        print 'Issuer:'
+        print('Issuer:')
         for attr in self._name_fields:
             oid = getattr(x509, attr.upper())
             issuer = pem_cert.issuer
@@ -174,7 +167,7 @@ class SdkQpylib(AbstractQpylib):
             if (info):
                 print("    {}: {}".format(attr, info[0].value))
 
-        print 'Subject:'
+        print('Subject:')
         for attr in self._name_fields:
             oid = getattr(x509, attr.upper())
             subject = pem_cert.subject
@@ -182,24 +175,24 @@ class SdkQpylib(AbstractQpylib):
             if (info):
                 print("    {}: {}".format(attr, info[0].value))
 
-        print 'Signature Hash Algorithm: {}'.format(pem_cert.signature_algorithm_oid._name)
+        print('Signature Hash Algorithm: {}'.format(pem_cert.signature_algorithm_oid._name))
 
         for ext in pem_cert.extensions:
             try:
-                print 'Extension: Name :', ext.oid._name
-                print '    Critical :', ext.critical
-                if isinstance (ext.value, collections.Iterable):
+                print('Extension: Name :', ext.oid._name)
+                print('    Critical :', ext.critical)
+                if isinstance(ext.value, Iterable):
                     for extsub in ext.value:
-                        print '    Value :', str(extsub)
+                        print('    Value :', str(extsub))
                 else:
-                    print '    Value :', ext.value
+                    print('    Value :', ext.value)
             except UnicodeEncodeError:
                 pass
 
-        print 'Signature: '
-        print (":".join("%02x" % ord(b) for b in pem_cert.signature))
-        print 'TBS Cert Signature: '
-        print (":".join("%02x" % ord(b) for b in pem_cert.tbs_certificate_bytes))
+        print('Signature: ')
+        print(":".join("%02x" % b for b in pem_cert.signature))
+        print('TBS Cert Signature: ')
+        print(":".join("%02x" % b for b in pem_cert.tbs_certificate_bytes))
         print('')
 
     def normalize_pem_data(self, pem_data):
@@ -224,15 +217,14 @@ class SdkQpylib(AbstractQpylib):
         else:
             if consoleIP == 0:
                 console_data = {}
-                print("What is the IP of QRadar console"),
-                print("required to make this API call:")
+                print("What is the IP of QRadar console required to make this API call:")
                 sys.stdout.flush()
-                consoleIP = raw_input()
+                consoleIP = input()
                 console_data['console'] = consoleIP
                 print("Do you want to store the console IP at:" + console_file_path)
                 print("[y/n]:")
                 sys.stdout.flush()
-                do_store = raw_input()
+                do_store = input()
                 if do_store in YES_OPTIONS:
                     with open(console_file_path, 'w+') as console_file:
                         json.dump(console_data, console_file)
@@ -258,16 +250,16 @@ class SdkQpylib(AbstractQpylib):
             if api_auth_user == 0:
                 print("User:")
                 sys.stdout.flush()
-                api_auth_user = raw_input()
+                api_auth_user = input()
             if api_auth_password == 0:
                 api_auth_password = getpass.getpass("Password:")
                 auth_data['user'] = api_auth_user
                 auth_data['password'] = api_auth_password
-                print("Store credentials credentials at:" + auth_file_path)
+                print("Store credentials credentials at: " + auth_file_path)
                 print("WARNING: credentials will be stored in clear.")
                 print("[y/n]:")
                 sys.stdout.flush()
-                do_store = raw_input()
+                do_store = input()
                 if do_store in YES_OPTIONS:
                     with open(auth_file_path, 'w+') as auth_file:
                         json.dump(auth_data, auth_file)
@@ -286,7 +278,7 @@ class SdkQpylib(AbstractQpylib):
         consoleAddress = self.get_console_address()
         fullURL = "https://" + str(consoleAddress) + "/" + str(requestURL)
         rest_func = self.chooseREST(RESTtype)
-        if not isinstance(verify, basestring):
+        if not isinstance(verify, str):
             verify = self.get_cert_filepath(consoleAddress)
         return rest_func(URL=fullURL, headers=headers, data=data, auth=auth, params=params,
                          json_inst=json_inst, timeout=timeout, verify=verify)
