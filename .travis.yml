@@ -1,44 +1,20 @@
+dist: xenial
 language: python
+python: 3.7.2
 
-env:
-  global:
-    - BUILD_IMAGE="qpylib"
-    - BUILD_TAG="build"
-    - PYTHON_VERSION_LONG="3.7.3"
-    - PYTHON_VERSION_SHORT="3.7"
+script: ./lint.sh && ./test.sh
 
-services:
-  - docker
+after_success:
+  - if [[ $TRAVIS_TAG ]]; then
+      ./build.sh ${TRAVIS_TAG};
+    else
+      ./build.sh ${TRAVIS_COMMIT}-dev;
+    fi
 
-before_install:
-  - ./build_image.sh "${PYTHON_VERSION_LONG}" "${PYTHON_VERSION_SHORT}" "${BUILD_IMAGE}:${BUILD_TAG}"
-
-stages:
-  - lint
-  - test
-  - name: build-development
-    if: tag IS blank
-  - name: build-release
-    if: tag IS present
-
-jobs:
-  include:
-    - stage: lint
-      script:
-        - ./lint.sh "${BUILD_IMAGE}:${BUILD_TAG}"
-    - stage: test
-      script:
-        - ./test.sh "${BUILD_IMAGE}:${BUILD_TAG}"
-    - stage: build-development
-      script:
-        - ./build.sh "${TRAVIS_COMMIT}-dev" "${BUILD_IMAGE}:${BUILD_TAG}"
-    - stage: build-release
-      script:
-        - ./build.sh "${TRAVIS_TAG}" "${BUILD_IMAGE}:${BUILD_TAG}"
-      deploy:
-        provider: releases
-        api_key: "${GITHUB_OAUTH_TOKEN}"
-        file: "dist/qpylib-${TRAVIS_TAG}.tar.gz"
-        skip_cleanup: true
-        on:
-          all_branches: true
+deploy:
+  provider: releases
+  api_key: ${GITHUB_OAUTH_TOKEN}
+  file: dist/qpylib-${TRAVIS_TAG}.tar.gz
+  skip_cleanup: true
+  on:
+    tags: true
