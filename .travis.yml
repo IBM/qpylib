@@ -2,16 +2,13 @@ dist: xenial
 language: python
 python: 3.7.2
 
-before_install: pip --version && pip list
-
 script: ./lint.sh && ./test.sh
 
 after_success:
-  - if [[ $TRAVIS_TAG ]]
-    then
-      ./build.sh ${TRAVIS_TAG}
+  - if [[ $TRAVIS_TAG ]]; then
+      ./build.sh ${TRAVIS_TAG};
     else
-      ./build.sh ${TRAVIS_COMMIT}-dev
+      ./build.sh ${TRAVIS_COMMIT}-dev;
     fi
 
 deploy:
