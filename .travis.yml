@@ -1,3 +1,7 @@
+# Copyright 2019 IBM Corporation All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+
 dist: xenial
 language: python
 python: 3.7.2
