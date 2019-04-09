@@ -1,0 +1,7 @@
+flask
+requests
+cryptography
+pyOpenSSL
+pycrypto
+pylint
+responses
