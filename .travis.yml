@@ -8,7 +8,7 @@ after_success:
   - if [[ $TRAVIS_TAG ]]; then
       ./build.sh ${TRAVIS_TAG};
     else
-      ./build.sh ${TRAVIS_COMMIT}-dev;
+      ./build.sh "0.0.dev${TRAVIS_BUILD_NUMBER}";
     fi
 
 deploy:
