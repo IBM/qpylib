@@ -1,3 +1,7 @@
+# Copyright 2019 IBM Corporation All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+
 dist: xenial
 language: python
 python: 3.7.2
@@ -8,7 +12,7 @@ after_success:
   - if [[ $TRAVIS_TAG ]]; then
       ./build.sh ${TRAVIS_TAG};
     else
-      ./build.sh ${TRAVIS_COMMIT}-dev;
+      ./build.sh "0.0.dev${TRAVIS_BUILD_NUMBER}";
     fi
 
 deploy:
