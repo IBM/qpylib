@@ -38,4 +38,4 @@ def get_oauth_token(renew_token=False):
     return oauth_token
 
 def add_oauth_header(headers, renew_token=False):
-    headers['Authorization'] = 'Bearer ' + get_oauth_token(renew_token)
+    headers['Authorization'] = 'Bearer {0}'.format(get_oauth_token(renew_token))

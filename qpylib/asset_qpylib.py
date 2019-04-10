@@ -10,10 +10,10 @@ JSON_LD_CONTEXT = 'http://qradar/context/location'
 
 # The api method to GET an individual asset is not yet supported.
 def get_asset_url(asset_id):
-    return 'api/asset_model/assets/' + asset_id
+    return 'api/asset_model/assets/{0}'.format(asset_id)
 
 def get_asset_url_full(asset_id):
-    return 'https://' + qpylib.get_console_address() + '/' + get_asset_url(asset_id)
+    return 'https://{0}/{1}'.format(qpylib.get_console_address(), get_asset_url(asset_id))
 
 def get_asset_json(asset_id):
     # Actual implementation commented out for now - see get_asset_url above

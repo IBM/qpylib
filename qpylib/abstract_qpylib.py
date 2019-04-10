@@ -44,7 +44,7 @@ class AbstractQpylib(object, metaclass=ABCMeta):
     def RESTget(self, URL, headers, data=None,
                 params=None, json_inst=None, auth=None,
                 timeout=60, verify=None):
-        self.log("REST get issued to " + URL + " " + str(params), "debug")
+        self.log("REST get issued to {0} {1}".format(URL, str(params)), "debug")
         return requests.get(URL, params=params,
                             headers=headers, verify=verify, auth=auth,
                             data=data, json=json_inst, timeout=timeout)
@@ -52,7 +52,7 @@ class AbstractQpylib(object, metaclass=ABCMeta):
     def RESTput(self, URL, headers, data=None,
                 params=None, json_inst=None, auth=None,
                 timeout=60, verify=None):
-        self.log("REST put issued to " + URL + " " + str(params), "debug")
+        self.log("REST put issued to {0} {1}".format(URL, str(params)), "debug")
         return requests.put(URL, params=params,
                             headers=headers, verify=verify, auth=auth,
                             data=data, json=json_inst, timeout=timeout)
@@ -60,7 +60,7 @@ class AbstractQpylib(object, metaclass=ABCMeta):
     def RESTpost(self, URL, headers, data=None,
                  params=None, json_inst=None, auth=None,
                  timeout=60, verify=None):
-        self.log("REST post issued to " + URL + " " + str(params), "debug")
+        self.log("REST post issued to {0} {1}".format(URL, str(params)), "debug")
         return requests.post(URL, params=params,
                              headers=headers, verify=verify, auth=auth,
                              data=data, json=json_inst, timeout=timeout)
@@ -68,7 +68,7 @@ class AbstractQpylib(object, metaclass=ABCMeta):
     def RESTdelete(self, URL, headers, data=None,
                    params=None, json_inst=None, auth=None,
                    timeout=None, verify=None):
-        self.log("REST delete issued to " + URL + " " + str(params), "debug")
+        self.log("REST delete issued to {0} {1}".format(URL, str(params)), "debug")
         return requests.delete(URL, params=params,
                                headers=headers, verify=verify, auth=auth,
                                data=data, json=json_inst, timeout=timeout)
@@ -76,10 +76,8 @@ class AbstractQpylib(object, metaclass=ABCMeta):
     def RESTunsupported(self, URL, headers, data=None,
                         params=None, json_inst=None, auth=None,
                         verify=None, timeout=0):
-        self.log("REST unsupported issued to " + URL + " " + str(params) +
-                 str(headers) + str(data) + str(json_inst) + str(auth) +
-                 str(verify) + str(timeout), "debug")
-        raise ValueError('The REST type passed is not supported')
+        self.log("REST unsupported issued to {0} {1}".format(URL, str(params)), "debug")
+        raise ValueError('The supplied REST type is not supported')
 
     def chooseREST(self, RESTtype):
         RESTtype = RESTtype.upper()
@@ -129,17 +127,15 @@ class AbstractQpylib(object, metaclass=ABCMeta):
         global LOGGER_NAME
         logger = logging.getLogger(LOGGER_NAME)
         self.add_log_handler(logger)
-        self.log("Created log " + LOGGER_NAME, 'info')
+        self.log("Created log {0}".format(LOGGER_NAME), 'info')
 
     def set_log_level(self, log_level='INFO'):
         logger.setLevel(self.map_log_level(log_level))
 
     def log(self, message, level='info'):
         log_fn = self.choose_log_level(level)
-        log_fn("127.0.0.1 " +
-               "[APP_ID/" +  self.get_app_id() + "]" +
-               "[NOT:" +  self.map_notification_code(level) + "] " +
-               message)
+        log_fn("127.0.0.1 [APP_ID/{0}][NOT:{1}] {2}".format(
+            self.get_app_id(), self.map_notification_code(level), message))
 
     @abstractmethod
     def get_console_address(self):
@@ -201,7 +197,7 @@ class AbstractQpylib(object, metaclass=ABCMeta):
         short-name Flask route name
         """
         url = self.get_app_base_url() + url_for(endpoint, **values)
-        self.log("q_url_for==>" + url, 'debug')
+        self.log("q_url_for={0}".format(url), 'debug')
         return url
 
     def map_notification_code(self, log_level='INFO'):
@@ -217,16 +213,16 @@ class AbstractQpylib(object, metaclass=ABCMeta):
     def register_jsonld_type(self, context):
         if context is not None:
             jsonld_type = self.extract_type(context)
-            self.log("Registering JSONLD type " + str(jsonld_type) , "info")
+            self.log("register_jsonld_type {0}".format(str(jsonld_type)), "info")
             json_qpylib.register_jsonld_type(jsonld_type, context)
 
     def get_jsonld_type(self, jsonld_type):
-        self.log("getting JSONLD type " + str(jsonld_type) , "debug")
+        self.log("get_jsonld_type {0}".format(str(jsonld_type)), "debug")
         return json_qpylib.get_jsonld_type(jsonld_type)
 
     def choose_offense_rendering(self, render_type):
         render_type_upper = render_type.upper()
-        self.log( 'choose_offense_rendering '+str(render_type_upper), 'debug' )
+        self.log('choose_offense_rendering {0}'.format(str(render_type_upper)), 'debug')
         return {
             'HTML': offense_qpylib.get_offense_json_html,
             'JSONLD': offense_qpylib.get_offense_json_ld,
@@ -238,7 +234,7 @@ class AbstractQpylib(object, metaclass=ABCMeta):
 
     def choose_asset_rendering(self, render_type):
         render_type_upper = render_type.upper()
-        self.log( 'choose_asset '+str(render_type_upper), 'debug' )
+        self.log('choose_asset_rendering {0}'.format(str(render_type_upper)), 'debug')
         return {
             'HTML': asset_qpylib.get_asset_json_html,
             'JSONLD': asset_qpylib.get_asset_json_ld,

@@ -30,7 +30,7 @@ class LiveQpylib(AbstractQpylib):
     def get_cert_filepath(self, host=None):
         # host is sdk-specific
         if '/etc/qradar_pki' in open('/proc/mounts').read():
-            self.log('Using ca bundle cert from file: ' + str(APP_CERT_LOCATION), level='debug')
+            self.log('Using ca bundle cert from file: {0}'.format(str(APP_CERT_LOCATION)), level='debug')
             cert_filepath = APP_CERT_LOCATION
         else:
             self.log('/etc/qradar_pki is not mounted in the container, validation turned off', level='debug')
@@ -102,9 +102,9 @@ class LiveQpylib(AbstractQpylib):
              timeout=60):
         headers = self.get_tokens(headers, version)
         if os.getenv('QRADAR_CONSOLE_FQDN'):
-            fullURL = "https://" + os.getenv("QRADAR_CONSOLE_FQDN") + "/" + requestURL
+            fullURL = "https://{0}/{1}".format(os.getenv("QRADAR_CONSOLE_FQDN"), requestURL)
         else:
-            fullURL = "https://" + self.get_console_address() + "/" + requestURL
+            fullURL = "https://{0}/{1}".format(self.get_console_address(), requestURL)
 
         if os.path.isfile('/store/consolecert.pem'):
             # if /store/consolecert.pem exists then we need to pass it 
@@ -172,15 +172,17 @@ class LiveQpylib(AbstractQpylib):
             console_ip = str(manifest["console_ip"])
         if 'app_id' in manifest.keys():
             app_id = str(manifest["app_id"])
-            url_suffix = "/console/plugins/" + app_id + "/app_proxy"
+            url_suffix = "/console/plugins/{0}/app_proxy".format(app_id)
 
         if request.headers.get('X-Console-Host'):
-            proxy_path = "https://" + request.headers['X-Console-Host'] + url_suffix
-        # If any of the information required for building the proxy then no base proxy path is generated
-        elif console_ip is not '' and url_suffix is not '':
-            proxy_path = "https://" + console_ip + url_suffix
+            proxy_path = "https://{0}{1}".format(request.headers['X-Console-Host'], url_suffix)
 
-        self.log("proxy_path==>" + proxy_path, 'debug')
+        # If any of the information required for building the proxy is missing
+        # then no base proxy path is generated
+        elif console_ip is not '' and url_suffix is not '':
+            proxy_path = "https://{0}{1}".format(console_ip, url_suffix)
+
+        self.log("proxy_path={0}".format(proxy_path), 'debug')
         self.log("<<<getAppBaseUrl", 'debug')
         return proxy_path
 

@@ -57,12 +57,12 @@ class SdkQpylib(AbstractQpylib):
                 with open(console_cert_file_path) as pem_file:
                     pem_text = pem_file.read()
                     x509.load_pem_x509_certificate(pem_text.encode(), default_backend())
-                print("Using console cert from file: " + str(console_cert_file_path))
+                print("Using console cert from file: {0}".format(str(console_cert_file_path)))
                 sys.stdout.flush()
                 return console_cert_file_path
 
             except ValueError:
-                print("Removing invalid console cert file " + str(console_cert_file_path))
+                print("Removing invalid console cert file {0}".format(str(console_cert_file_path)))
                 sys.stdout.flush()
                 os.remove(console_cert_file_path)
 
@@ -90,7 +90,7 @@ class SdkQpylib(AbstractQpylib):
             
         print('')
         print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
-        print('Server ' + host + ' is unknown, do you want to trust it?')
+        print('Server {0} is unknown, do you want to trust it?'.format(host))
         print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
         print('')
         self.display_pem_cert_details(pem_text)
@@ -103,7 +103,7 @@ class SdkQpylib(AbstractQpylib):
             sys.stdout.flush()
             raise ValueError("Certificate was rejected")
 
-        print("Storing cert file to " + console_cert_file_path)
+        print("Storing cert file to {0}".format(console_cert_file_path))
         sys.stdout.flush()
 
         if use_pre_732_cert:
@@ -209,7 +209,7 @@ class SdkQpylib(AbstractQpylib):
         home = os.path.expanduser("~")
         console_file_path = os.path.join(home, DEV_CONSOLE_FILE)
         if os.path.isfile(console_file_path):
-            print("Loading console details from file: " + str(console_file_path))
+            print("Loading console details from file: {0}".format(str(console_file_path)))
             sys.stdout.flush()
             with open(console_file_path) as consolefile:
                 console_json = json.load(consolefile)
@@ -221,7 +221,7 @@ class SdkQpylib(AbstractQpylib):
                 sys.stdout.flush()
                 consoleIP = input()
                 console_data['console'] = consoleIP
-                print("Do you want to store the console IP at:" + console_file_path)
+                print("Do you want to store the console IP at {0}?".format(console_file_path))
                 print("[y/n]:")
                 sys.stdout.flush()
                 do_store = input()
@@ -238,7 +238,7 @@ class SdkQpylib(AbstractQpylib):
         home = os.path.expanduser("~")
         auth_file_path = os.path.join(home, DEV_AUTH_FILE)
         if os.path.isfile(auth_file_path):
-            print("Loading user details from file: " + str(auth_file_path))
+            print("Loading user details from file: {0}".format(auth_file_path))
             sys.stdout.flush()
             with open(auth_file_path) as authfile:
                 auth_json = json.load(authfile)
@@ -246,7 +246,7 @@ class SdkQpylib(AbstractQpylib):
         else:
             auth_data = {}
             consoleAddress = self.get_console_address()
-            print("QRadar credentials for " + consoleAddress + " are required to make this API call:")
+            print("QRadar credentials for {0} are required to make this API call".format(consoleAddress))
             if api_auth_user == 0:
                 print("User:")
                 sys.stdout.flush()
@@ -255,7 +255,7 @@ class SdkQpylib(AbstractQpylib):
                 api_auth_password = getpass.getpass("Password:")
                 auth_data['user'] = api_auth_user
                 auth_data['password'] = api_auth_password
-                print("Store credentials credentials at: " + auth_file_path)
+                print("Store credentials credentials at: {0}".format(auth_file_path))
                 print("WARNING: credentials will be stored in clear.")
                 print("[y/n]:")
                 sys.stdout.flush()
