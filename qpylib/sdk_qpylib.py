@@ -3,7 +3,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from .abstract_qpylib import AbstractQpylib
-from collections.abc import Iterable
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
@@ -151,13 +150,14 @@ class SdkQpylib(AbstractQpylib):
         print('Certificate details:')
         print('********************')
         print('Version: {}'.format(pem_cert.version))
-        print('SHA-256 Fingerprint: ')
-        print("%02x" % b for b in pem_cert.fingerprint(hashes.SHA256()))
-        print('SHA1 Fingerprint: ')
-        print("%02x" % b for b in pem_cert.fingerprint(hashes.SHA1()))
-        print('Serial Number: {}'.format(self.int_to_delim_hex(':', pem_cert.serial_number)))
+        print('SHA-256 Fingerprint:', end=' ')
+        print(':'.join(format(b, '02x') for b in pem_cert.fingerprint(hashes.SHA256())))
+        print('SHA-1 Fingerprint:', end=' ')
+        print(':'.join(format(b, '02x') for b in pem_cert.fingerprint(hashes.SHA1())))
+        print('Serial Number: {}'.format(pem_cert.serial_number))
         print('Not valid before: {}'.format(pem_cert.not_valid_before))
         print('Not valid after: {}'.format(pem_cert.not_valid_after))
+        print('Signature Hash Algorithm: {}'.format(pem_cert.signature_algorithm_oid._name))
 
         print('Issuer:')
         for attr in self._name_fields:
@@ -175,33 +175,22 @@ class SdkQpylib(AbstractQpylib):
             if (info):
                 print("    {}: {}".format(attr, info[0].value))
 
-        print('Signature Hash Algorithm: {}'.format(pem_cert.signature_algorithm_oid._name))
-
         for ext in pem_cert.extensions:
             try:
                 print('Extension: Name :', ext.oid._name)
                 print('    Critical :', ext.critical)
-                if isinstance(ext.value, Iterable):
-                    for extsub in ext.value:
-                        print('    Value :', str(extsub))
-                else:
-                    print('    Value :', ext.value)
+                print('    Value :', ext.value)
             except UnicodeEncodeError:
                 pass
 
-        print('Signature: ')
-        print(":".join("%02x" % b for b in pem_cert.signature))
-        print('TBS Cert Signature: ')
-        print(":".join("%02x" % b for b in pem_cert.tbs_certificate_bytes))
+        print('Signature:\n   ', end=' ')
+        print(":".join(format(b, '02x') for b in pem_cert.signature))
+        print('TBS Cert Signature:\n   ', end=' ')
+        print(":".join(format(b, '02x') for b in pem_cert.tbs_certificate_bytes))
         print('')
 
     def normalize_pem_data(self, pem_data):
         return unicodedata.normalize('NFKD', pem_data).encode('ascii', 'ignore')
-
-    def int_to_delim_hex(self, delim, num):
-        line = '%x' % num
-        array_line = [line[i:i+2] for i in range(0, len(line), 2)]
-        return delim.join(array_line)
 
     def get_console_address(self):
         global consoleIP
