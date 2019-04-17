@@ -1,0 +1,6 @@
+{
+    "name": "Pre-install Manifest",
+    "description": "Does not contain app_id or console_ip",
+    "version": "1.0",
+    "uuid": "aaff161f-871a-435c-866b-c65b4ceca959"
+}

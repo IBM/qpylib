@@ -12,103 +12,55 @@ from . import asset_qpylib
 from . import json_qpylib
 from . import offense_qpylib
 
-LOGGER_NAME = 'com.ibm.applicationLogger'
-logger = 0
-cached_manifest = None
-
 class AbstractQpylib(object, metaclass=ABCMeta):
-    @abstractmethod
-    def get_app_id(self):
-        pass
+
+    def __init__(self):
+        self.LOGGER_NAME = 'com.ibm.applicationLogger'
+        self.qlogger = 0
+        self.cached_manifest = None
+
+    # ==== Logging ====
+
+    def log(self, message, level='info'):
+        log_fn = self._choose_log_level(level)
+        log_fn("127.0.0.1 [APP_ID/{0}][NOT:{1}] {2}".format(
+            self.get_app_id(), self._map_notification_code(level), message))
+
+    def create_log(self):
+        self.qlogger = logging.getLogger(self.LOGGER_NAME)
+        self._add_log_handler(self.qlogger)
+        self.log("Created log {0}".format(self.LOGGER_NAME), 'info')
+
+    def set_log_level(self, log_level='INFO'):
+        self.qlogger.setLevel(self._map_log_level(log_level))
 
     @abstractmethod
-    def get_app_name(self):
+    def _add_log_handler(self, loc_logger):
         pass
 
-    @abstractmethod
-    def get_manifest_location(self):
-        pass
-
-    def get_manifest_json(self):
-        global cached_manifest
-        if cached_manifest is None:
-            full_manifest_location = os.path.join(self.root_path(), self.get_manifest_location())
-            with open(full_manifest_location) as manifest_file:
-                cached_manifest = json.load(manifest_file)
-        return cached_manifest
-
-    def is_manifest_oauth(self):
-        manifest = self.get_manifest_json()
-        return 'authentication' in manifest.keys()
-
-    def RESTget(self, URL, headers, data=None,
-                params=None, json_inst=None, auth=None,
-                timeout=60, verify=None):
-        self.log("REST get issued to {0} {1}".format(URL, str(params)), "debug")
-        return requests.get(URL, params=params,
-                            headers=headers, verify=verify, auth=auth,
-                            data=data, json=json_inst, timeout=timeout)
-
-    def RESTput(self, URL, headers, data=None,
-                params=None, json_inst=None, auth=None,
-                timeout=60, verify=None):
-        self.log("REST put issued to {0} {1}".format(URL, str(params)), "debug")
-        return requests.put(URL, params=params,
-                            headers=headers, verify=verify, auth=auth,
-                            data=data, json=json_inst, timeout=timeout)
-
-    def RESTpost(self, URL, headers, data=None,
-                 params=None, json_inst=None, auth=None,
-                 timeout=60, verify=None):
-        self.log("REST post issued to {0} {1}".format(URL, str(params)), "debug")
-        return requests.post(URL, params=params,
-                             headers=headers, verify=verify, auth=auth,
-                             data=data, json=json_inst, timeout=timeout)
-
-    def RESTdelete(self, URL, headers, data=None,
-                   params=None, json_inst=None, auth=None,
-                   timeout=None, verify=None):
-        self.log("REST delete issued to {0} {1}".format(URL, str(params)), "debug")
-        return requests.delete(URL, params=params,
-                               headers=headers, verify=verify, auth=auth,
-                               data=data, json=json_inst, timeout=timeout)
-
-    def RESTunsupported(self, URL, headers, data=None,
-                        params=None, json_inst=None, auth=None,
-                        verify=None, timeout=0):
-        self.log("REST unsupported issued to {0} {1}".format(URL, str(params)), "debug")
-        raise ValueError('The supplied REST type is not supported')
-
-    def chooseREST(self, RESTtype):
-        RESTtype = RESTtype.upper()
+    def _choose_log_level(self, level='INFO'):
+        if self.qlogger == 0:
+            raise SystemError('You cannot use log before logging has been initialised')
         return {
-            'GET': self.RESTget,
-            'PUT': self.RESTput,
-            'POST': self.RESTpost,
-            'DELETE': self.RESTdelete,
-        }.get(RESTtype, self.RESTunsupported)
+            'INFO': self.qlogger.info,
+            'DEBUG': self.qlogger.debug,
+            'ERROR': self.qlogger.error,
+            'WARNING': self.qlogger.warning,
+            'CRITICAL': self.qlogger.critical,
+            'EXCEPTION': self.qlogger.exception,
+        }.get(level.upper(), self.qlogger.info)
 
-    @abstractmethod
-    def REST(self, RESTtype, requestURL, headers=None, data=None,
-             params=None, json_inst=None, version=None, verify=None,
-             timeout=60):
-        pass
-
-    def choose_log_level(self, level='INFO'):
-        if logger == 0:
-            raise SystemError('You cannot call log before logging has been initialised')
-
-        level = level.upper()
+    def _map_notification_code(self, log_level='INFO'):
+        log_level = log_level.upper()
         return {
-            'INFO': logger.info,
-            'DEBUG': logger.debug,
-            'ERROR': logger.error,
-            'WARNING': logger.warning,
-            'CRITICAL': logger.critical,
-            'EXCEPTION': logger.exception,
-        }.get(level, logger.info)
+            'INFO': "0000006000",
+            'DEBUG': "0000006000",
+            'ERROR': "0000003000",
+            'WARNING': "0000004000",
+            'CRITICAL': "0000003000",
+        }.get(log_level, "0000006000")
 
-    def map_log_level(self, log_level='INFO'):
+    def _map_log_level(self, log_level='INFO'):
         log_level = log_level.upper()
         return {
             'INFO': logging.INFO,
@@ -118,45 +70,87 @@ class AbstractQpylib(object, metaclass=ABCMeta):
             'CRITICAL': logging.CRITICAL,
         }.get(log_level, logging.INFO)
 
+    # ==== App details ====
+
     @abstractmethod
-    def add_log_handler(self, loc_logger):
+    def get_app_id(self):
         pass
 
-    def create_log(self):
-        global logger
-        global LOGGER_NAME
-        logger = logging.getLogger(LOGGER_NAME)
-        self.add_log_handler(logger)
-        self.log("Created log {0}".format(LOGGER_NAME), 'info')
+    @abstractmethod
+    def get_app_name(self):
+        pass
 
-    def set_log_level(self, log_level='INFO'):
-        logger.setLevel(self.map_log_level(log_level))
+    def get_manifest_json(self):
+        if self.cached_manifest is None:
+            full_manifest_location = self.get_root_path(self._get_manifest_location())
+            with open(full_manifest_location) as manifest_file:
+                self.cached_manifest = json.load(manifest_file)
+        return self.cached_manifest
 
-    def log(self, message, level='info'):
-        log_fn = self.choose_log_level(level)
-        log_fn("127.0.0.1 [APP_ID/{0}][NOT:{1}] {2}".format(
-            self.get_app_id(), self.map_notification_code(level), message))
+    @abstractmethod
+    def _get_manifest_location(self):
+        pass
+
+    def _get_manifest_field_value(self, key, default_value=None):
+        manifest = self.get_manifest_json()
+        if key in manifest.keys():
+            return manifest[key]
+        if default_value is not None:
+            return default_value
+        raise KeyError('{0} is a required manifest field'.format(key))
+
+    def get_store_path(self, relative_path):
+        if relative_path == '':
+            return os.path.join(self._root_path(), 'store')
+        return os.path.join(self._root_path(), 'store', relative_path)
+
+    def get_root_path(self, relative_path):
+        return os.path.join(self._root_path(), relative_path)
+
+    @abstractmethod
+    def _root_path(self):
+        pass
+
+    @abstractmethod
+    def get_app_base_url(self):
+        pass
+
+    def q_url_for(self, endpoint, **values):
+        """
+        Wraps the standard Flask url_for() method to include the proxied url
+        through Qradar as a prefix to the Flask route name
+        """
+        url = self.get_app_base_url() + self._get_endpoint_url(endpoint, **values)
+        self.log("q_url_for={0}".format(url), 'debug')
+        return url
+
+    def _get_endpoint_url(self, endpoint, **values):
+        return url_for(endpoint, **values)
 
     @abstractmethod
     def get_console_address(self):
         pass
 
-    @abstractmethod
-    def root_path(self):
-        pass
-
-    def get_root_path(self,relative_path):
-        return os.path.join(self.root_path(), relative_path)
-
-    def store_path(self):
-        return os.path.join(self.root_path(), 'store')
-
-    def get_store_path(self, relative_path):
-        return os.path.join(self.store_path(), relative_path)
+    # ==== REST ====
 
     @abstractmethod
-    def get_cert_filepath(self, host):
+    def REST(self, rest_type, request_url, headers=None, data=None,
+             params=None, json_body=None, version=None, verify=None,
+             timeout=60):
         pass
+
+    def _chooseREST(self, rest_type):
+        return {
+            'GET': requests.get,
+            'PUT': requests.put,
+            'POST': requests.post,
+            'DELETE': requests.delete,
+        }.get(rest_type.upper(), self._unsupported_REST)
+
+    def _unsupported_REST(self, *args, **kw_args):
+        raise ValueError('Unsupported REST action was requested')
+
+    # ==== JSON ====
 
     def to_json_dict(self, python_obj, classkey=None):
         """
@@ -167,6 +161,9 @@ class AbstractQpylib(object, metaclass=ABCMeta):
         @return dict object containing key:value pairs for the python
         objects fields. Useable with JSON REST.
         """
+        print(type(python_obj))
+        if isinstance(python_obj, str):
+            return python_obj
         if isinstance(python_obj, dict):
             data = {}
             for (k, v) in list(python_obj.items()):
@@ -186,70 +183,13 @@ class AbstractQpylib(object, metaclass=ABCMeta):
         else:
             return python_obj
 
-    @abstractmethod
-    def get_app_base_url(self):
-        pass
-
-    def q_url_for(self, endpoint, **values):
-        """
-        Create a method to wrap the standard Flask url_for())method,
-        to include the proxied url through Qradar as a prefix to the
-        short-name Flask route name
-        """
-        url = self.get_app_base_url() + url_for(endpoint, **values)
-        self.log("q_url_for={0}".format(url), 'debug')
-        return url
-
-    def map_notification_code(self, log_level='INFO'):
-        log_level = log_level.upper()
-        return {
-            'INFO': "0000006000",
-            'DEBUG': "0000006000",
-            'ERROR': "0000003000",
-            'WARNING': "0000004000",
-            'CRITICAL': "0000003000",
-        }.get(log_level, "0000006000")
-
     def register_jsonld_type(self, context):
         if context is not None:
-            jsonld_type = self.extract_type(context)
+            jsonld_type = self._extract_type(context)
             self.log("register_jsonld_type {0}".format(str(jsonld_type)), "info")
             json_qpylib.register_jsonld_type(jsonld_type, context)
 
-    def get_jsonld_type(self, jsonld_type):
-        self.log("get_jsonld_type {0}".format(str(jsonld_type)), "debug")
-        return json_qpylib.get_jsonld_type(jsonld_type)
-
-    def choose_offense_rendering(self, render_type):
-        render_type_upper = render_type.upper()
-        self.log('choose_offense_rendering {0}'.format(str(render_type_upper)), 'debug')
-        return {
-            'HTML': offense_qpylib.get_offense_json_html,
-            'JSONLD': offense_qpylib.get_offense_json_ld,
-        }.get(render_type_upper, offense_qpylib.get_offense_json_html)
-
-    def get_offense_rendering(self, offense_id, render_type):
-        rendering_fn = self.choose_offense_rendering(render_type)
-        return rendering_fn(offense_id)
-
-    def choose_asset_rendering(self, render_type):
-        render_type_upper = render_type.upper()
-        self.log('choose_asset_rendering {0}'.format(str(render_type_upper)), 'debug')
-        return {
-            'HTML': asset_qpylib.get_asset_json_html,
-            'JSONLD': asset_qpylib.get_asset_json_ld,
-        }.get(render_type_upper, asset_qpylib.get_asset_json_html)
-
-    def get_asset_rendering(self, asset_id, render_type):
-        rendering_fn = self.choose_asset_rendering(render_type)
-        return rendering_fn(asset_id)
-
-    def extract_jsonld_context(self, argument, mime_id, context_id):
-        if mime_id in argument.keys() and context_id in argument.keys():
-            if argument[mime_id] == 'application/json+ld':
-                return argument[context_id]
-
-    def extract_type(self, argument):
+    def _extract_type(self, argument):
         type_id=None
         if '@context' in argument.keys():
             context=argument['@context']
@@ -258,6 +198,31 @@ class AbstractQpylib(object, metaclass=ABCMeta):
             if type_id == '@id' and '@id' in context.keys():
                 type_id=context['@id']
         return type_id
+
+    def get_offense_rendering(self, offense_id, render_type):
+        rendering_fn = self._choose_offense_rendering(render_type)
+        return rendering_fn(offense_id)
+
+    def _choose_offense_rendering(self, render_type):
+        self.log('_choose_offense_rendering {0}'.format(str(render_type)), 'debug')
+        return {
+            'HTML': offense_qpylib.get_offense_json_html,
+            'JSONLD': offense_qpylib.get_offense_json_ld,
+        }.get(render_type.upper(), offense_qpylib.get_offense_json_html)
+
+    def get_asset_rendering(self, asset_id, render_type):
+        rendering_fn = self._choose_asset_rendering(render_type)
+        return rendering_fn(asset_id)
+
+    def _choose_asset_rendering(self, render_type):
+        self.log('_choose_asset_rendering {0}'.format(str(render_type)), 'debug')
+        return {
+            'HTML': asset_qpylib.get_asset_json_html,
+            'JSONLD': asset_qpylib.get_asset_json_ld,
+        }.get(render_type.upper(), asset_qpylib.get_asset_json_html)
+
+    def render_json_ld_type(self, jld_type, data, jld_id = None):
+        return json_qpylib.render_json_ld_type(jld_type, data, jld_id)
 
     def register_jsonld_endpoints(self):
         manifest = self.get_manifest_json()
@@ -276,13 +241,14 @@ class AbstractQpylib(object, metaclass=ABCMeta):
                 jsonld_context = None
                 if 'request_mime_type' in endpoint.keys():
                     argument=endpoint
-                    jsonld_context = self.extract_jsonld_context(argument, 'request_mime_type', 'request_body_type')
+                    jsonld_context = self._extract_jsonld_context(argument, 'request_mime_type', 'request_body_type')
                     self.register_jsonld_type(jsonld_context)
                 if 'response' in endpoint.keys():
                     argument = endpoint['response']
-                    jsonld_context = self.extract_jsonld_context(argument, 'mime_type', 'body_type')
+                    jsonld_context = self._extract_jsonld_context(argument, 'mime_type', 'body_type')
                     self.register_jsonld_type(jsonld_context)
 
-    def render_json_ld_type(self, jld_type, data, jld_id = None):
-        return json_qpylib.render_json_ld_type(jld_type, data, jld_id)
-
+    def _extract_jsonld_context(self, argument, mime_id, context_id):
+        if mime_id in argument.keys() and context_id in argument.keys():
+            if argument[mime_id] == 'application/json+ld':
+                return argument[context_id]
