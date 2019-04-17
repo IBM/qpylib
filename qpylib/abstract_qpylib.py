@@ -161,7 +161,6 @@ class AbstractQpylib(object, metaclass=ABCMeta):
         @return dict object containing key:value pairs for the python
         objects fields. Useable with JSON REST.
         """
-        print(type(python_obj))
         if isinstance(python_obj, str):
             return python_obj
         if isinstance(python_obj, dict):
