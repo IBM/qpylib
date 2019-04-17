@@ -9,15 +9,15 @@ from . import json_qpylib
 JSON_LD_CONTEXT = 'http://qradar/context/location'
 
 def get_offense_url(offense_id):
-    return 'api/siem/offenses/' + offense_id
+    return 'api/siem/offenses/{0}'.format(offense_id)
 
 def get_offense_url_full(offense_id):
-    return 'https://' + qpylib.get_console_address() + '/' + get_offense_url(offense_id),
+    return 'https://{0}/{1}'.format(qpylib.get_console_address(), get_offense_url(offense_id))
 
 def get_offense_json(offense_id):
     response = qpylib.REST('get', get_offense_url(offense_id))
     if response.status_code != 200:
-        raise ValueError('Could not retrieve offense with id ' + offense_id)
+        raise ValueError('Could not retrieve offense with id {0}'.format(offense_id))
     return response.json()
 
 def get_offense_html_example(offense_json):

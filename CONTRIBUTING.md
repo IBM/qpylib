@@ -16,7 +16,7 @@ pull request so it can be tracked.
 
 Any change requires approval from two maintainers before it can be merged.
 
-For a list of the maintainers, see the [MAINTAINERS.md](MAINTAINERS.md) page.
+For a list of the maintainers, see the [MAINTAINERS](MAINTAINERS.md) page.
 
 ## Legal
 

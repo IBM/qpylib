@@ -1,7 +1,0 @@
-{
-    "name":"Example Manifest",
-    "description":"A sample app manifest",
-    "version":"1.0",
-    "uuid":"aaff161f-871a-435c-866b-c65b4ceca959",
-    "console_ip": "9.123.321.101"
-}
