@@ -6,8 +6,9 @@ SPDX-License-Identifier: Apache-2.0
 import setuptools
 
 def main():
-    with open("VERSION", "r") as version_file:
-        version = version_file.read().rstrip()
+    with open("qpylib/version.py", "r") as version_file:
+        line = version_file.read().rstrip()
+        _, _, version = line.replace("'", '').split()
 
     with open("README.md", "r") as readme:
         long_desc = readme.read()

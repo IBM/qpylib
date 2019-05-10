@@ -12,4 +12,4 @@ build
 dist
 qpylib.egg-info
 RemoteSystemsTempFiles
-VERSION
+qpylib/version.py

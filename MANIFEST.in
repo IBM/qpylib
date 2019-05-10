@@ -1,2 +1,3 @@
-include LICENSE VERSION
+include LICENSE
+exclude MANIFEST.in
 prune test

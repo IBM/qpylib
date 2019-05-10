@@ -3,4 +3,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
 __author__ = 'IBM'
-__version__ = '1.0'
+__version__ = 'unknown'
+try:
+    from .version import __version__
+except ImportError:
+    pass
