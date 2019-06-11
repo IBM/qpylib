@@ -35,7 +35,7 @@ class Encryption(object):
         self.config[self.name]['salt'] = self.__generate_random()
         self.config[self.name]['UUID'] = self.__generate_token()
         self.config[self.name]['ivz'] = self.__generate_random()
-        self.config[self.name]['iterations'] = random.randint(1500, 2000)
+        self.config[self.name]['iterations'] = 100000
         self.__save_config()
 
     def __load_config(self):
