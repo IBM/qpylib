@@ -101,3 +101,19 @@ def test_decrypt_returns_incorrect_plaintext_with_altered_salt(set_unset_qradar_
         json.dump(file_json, db_file)
     enc = Encryption({"name": "test_name", "user": "test_user"})
     assert enc.decrypt() != 'testing123'
+
+def test_decrypt_raise_value_error_on_engine_version_mismatch(set_unset_qradar_app_uuid_env_var,
+                                                               patch_get_store_path):
+    enc = Encryption({"name": "test_name", "user": "test_user"})
+    enc_string = enc.encrypt('testing123')
+    assert enc_string != 'testing123'
+
+    with open(DB_STORE) as db_file:
+        file_json = json.load(db_file)
+    file_json['test_name']['version'] = -1
+    with open(DB_STORE, 'w') as db_file:
+        json.dump(file_json, db_file)
+    enc = Encryption({"name": "test_name", "user": "test_user"})
+    with pytest.raises(ValueError) as ex:
+        enc.decrypt() != 'testing123'
+    assert "Encryption : secret engine mismatch." in str(ex.value)

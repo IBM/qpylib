@@ -5,12 +5,12 @@
 from binascii import a2b_hex, b2a_hex
 import json
 import os
-import random
 import string
+import uuid
 from . import qpylib
 
+from Crypto.Random import random
 from Crypto.Cipher import AES
-from Crypto.Hash import MD5
 from Crypto.Protocol import KDF
 
 class Encryption(object):
@@ -63,21 +63,20 @@ class Encryption(object):
             qpylib.log('encdec : __save_config : Error saving Encryption config file: {0}'.format(str(error)))
 
     def __generate_token(self):
-        """ Generates an MD5 Token to be used as a UUID.
-            Returns a string containing hex characters.
-        """
-        newMd5 = MD5.new(self.__generate_random().encode('utf-8')).hexdigest()
+        """ Generates a UUID to be used as reference_data map name. """
+        token = str(uuid.uuid4())
         if len(self.config) > 0:
             for name in self.config:
-                if 'UUID' in self.config[name] and str(newMd5) == str(self.config[name]['UUID']):
-                    newMd5 = self.__generate_token()
-        return newMd5
+                if 'UUID' in self.config[name] and token == str(self.config[name]['UUID']):
+                    token = self.__generate_token()
+        return token
 
     def __generate_random(self):
         """ Returns a string containing a random hash that uses letters, digits and special characters """
         random_hash = ''.join(
             (
-                random.SystemRandom().choice(string.ascii_letters + string.digits + string.punctuation)
+                random.choice(string.ascii_letters + string.digits + string.punctuation)
+
             )
             for _ in range(16)
         )
@@ -87,7 +86,7 @@ class Encryption(object):
         """ Generates derived key using stored config """
         return KDF.PBKDF2(self.app_uuid + self.config[self.name]['UUID'],
                           self.config[self.name]['salt'].encode('utf-8'),
-                          dkLen=16,
+                          dkLen=32, #32 bytes = 256 bits, max AES key length
                           count=self.config[self.name]['iterations'])
 
     def __encrypt_string(self, clear_text_string):
