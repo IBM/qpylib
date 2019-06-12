@@ -2,6 +2,6 @@ flask
 requests
 cryptography
 pyOpenSSL
-pycrypto
+pycryptodome
 pylint
 responses

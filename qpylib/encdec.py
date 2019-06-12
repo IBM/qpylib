@@ -98,7 +98,7 @@ class Encryption(object):
             self.config[self.name]['ivz'].encode('utf-8'),
             segment_size=128)
         clear_text_padded_string = self.__pad_string(clear_text_string)
-        encrypted_bytes = aes.encrypt(clear_text_padded_string)
+        encrypted_bytes = aes.encrypt(clear_text_padded_string.encode("utf8"))
         encrypted_hex_bytes = b2a_hex(encrypted_bytes).rstrip()
         return encrypted_hex_bytes.decode('utf-8')
 
