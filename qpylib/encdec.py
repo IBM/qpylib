@@ -153,7 +153,7 @@ class Encryption(object):
             raise ValueError("Encryption : no secret to decrypt")
 
         if self.config[self.name].get('version') != Encryption.engine_version:
-            raise ValueError("Encryption : secret engine mismatch. Secret was stored with version {}, attempted to decrypt with version {}.".format(self.config[self.name].get('version') , engine_version))
+            raise ValueError("Encryption : secret engine mismatch. Secret was stored with version {}, attempted to decrypt with version {}.".format(self.config[self.name].get('version') , Encryption.engine_version))
 
         try:
             return self.__decrypt_string(self.config[self.name]['secret'])
