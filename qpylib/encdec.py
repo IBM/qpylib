@@ -13,7 +13,6 @@ from Crypto.Random import random
 from Crypto.Cipher import AES
 from Crypto.Protocol import KDF
 
-#Any time there is a breaking change made to the way enc or dec is handled, update this
 # The encryption class is now version aware.
 # EACH BREAKING CHANGE IN THE CRYPTOGRAPHIC METHODS SHOULD INCREMENT THE VERSION
 # This enables better error handling for users. Users can also query the
