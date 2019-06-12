@@ -115,5 +115,5 @@ def test_decrypt_raise_value_error_on_engine_version_mismatch(set_unset_qradar_a
         json.dump(file_json, db_file)
     enc = Encryption({"name": "test_name", "user": "test_user"})
     with pytest.raises(ValueError) as ex:
-        enc.decrypt() != 'testing123'
+        enc.decrypt()
     assert "Encryption : secret engine mismatch." in str(ex.value)
