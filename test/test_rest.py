@@ -57,11 +57,11 @@ def test_rest_uses_sec_cookie_when_env_var_not_set(env_qradar_console_fqdn):
 
 @responses.activate
 def test_rest_uses_manifest_console_ip_when_env_var_not_set():
-    responses.add('GET', 'https://9.123.321.101/testing_endpoint', status=200)
+    responses.add('GET', 'https://9.123.234.101/testing_endpoint', status=200)
     response = qpylib.REST('GET', 'testing_endpoint', verify='dummycert')
     assert response.status_code == 200
     assert responses.calls[0].request.method == 'GET'
-    assert responses.calls[0].request.url == 'https://9.123.321.101/testing_endpoint'
+    assert responses.calls[0].request.url == 'https://9.123.234.101/testing_endpoint'
 
 @responses.activate
 def test_rest_sets_version_header(env_qradar_console_fqdn):

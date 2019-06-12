@@ -56,7 +56,7 @@ def test_get_manifest_json_no_cache(mock_root_path, mock_get_manifest_location):
     assert manifest_json['version'] == '1.0'
     assert manifest_json['uuid'] == 'aaff161f-871a-435c-866b-c65b4ceca959'
     assert manifest_json['app_id'] == 1005
-    assert manifest_json['console_ip'] == '9.123.321.101'
+    assert manifest_json['console_ip'] == '9.123.234.101'
 
 # ==== get_store_path ====
 
@@ -89,7 +89,7 @@ def test_get_app_base_url_returns_empty_string_when_console_ip_missing_from_mani
 @patch(GET_MANIFEST_LOCATION, return_value = 'manifests/installed.json')
 @patch(APP_ROOT_PATH, return_value = QTEST_DIR)
 def test_get_app_base_url_uses_console_ip_when_x_console_host_header_missing(mock_root_path, mock_get_manifest_location):
-    assert qpylib.get_app_base_url() == 'https://9.123.321.101/console/plugins/1005/app_proxy'
+    assert qpylib.get_app_base_url() == 'https://9.123.234.101/console/plugins/1005/app_proxy'
 
 @patch(GET_MANIFEST_LOCATION, return_value = 'manifests/installed.json')
 @patch(APP_ROOT_PATH, return_value = QTEST_DIR)
@@ -103,14 +103,14 @@ def test_get_app_base_url_uses_x_console_host_header_if_present(mock_get_host_he
 @patch(APP_ROOT_PATH, return_value = QTEST_DIR)
 @patch(GET_ENDPOINT_URL, return_value = '/index')
 def test_q_url_for(mock_flask_url_for, mock_root_path, mock_get_manifest_location):
-    assert qpylib.q_url_for('index') == 'https://9.123.321.101/console/plugins/1005/app_proxy/index'
+    assert qpylib.q_url_for('index') == 'https://9.123.234.101/console/plugins/1005/app_proxy/index'
 
 # ==== get_console_address ====
 
 @patch(GET_MANIFEST_LOCATION, return_value = 'manifests/installed.json')
 @patch(APP_ROOT_PATH, return_value = QTEST_DIR)
 def test_get_console_address_returns_value_from_manifest(mock_root_path, mock_get_manifest_location):
-    assert qpylib.get_console_address() == "9.123.321.101"
+    assert qpylib.get_console_address() == "9.123.234.101"
 
 @patch(GET_MANIFEST_LOCATION, return_value = 'manifests/installed_no_console_ip.json')
 @patch(APP_ROOT_PATH, return_value = QTEST_DIR)
