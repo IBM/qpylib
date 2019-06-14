@@ -13,3 +13,4 @@ dist
 qpylib.egg-info
 RemoteSystemsTempFiles
 qpylib/version.py
+.idea/
