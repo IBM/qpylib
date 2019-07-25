@@ -9,8 +9,8 @@ import os
 import pytest
 from qpylib import qpylib
 
-GET_MANIFEST_LOCATION = 'qpylib.live_qpylib.LiveQpylib._get_manifest_location'
-APP_ROOT_PATH = 'qpylib.live_qpylib.LiveQpylib._root_path'
+GET_MANIFEST_LOCATION = 'qpylib.abstract_qpylib.AbstractQpylib._get_manifest_location'
+APP_ROOT_PATH = 'qpylib.abstract_qpylib.AbstractQpylib._root_path'
 GET_HOST_HEADER = 'qpylib.live_qpylib.LiveQpylib._get_host_header'
 GET_ENDPOINT_URL = 'qpylib.abstract_qpylib.AbstractQpylib._get_endpoint_url'
 QTEST_DIR = os.path.dirname(__file__)

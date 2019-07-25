@@ -72,13 +72,11 @@ class AbstractQpylib(object, metaclass=ABCMeta):
 
     # ==== App details ====
 
-    @abstractmethod
     def get_app_id(self):
-        pass
+        return self._get_manifest_field_value('app_id', 0)
 
-    @abstractmethod
     def get_app_name(self):
-        pass
+        return self._get_manifest_field_value('name')
 
     def get_manifest_json(self):
         if self.cached_manifest is None:
@@ -87,9 +85,8 @@ class AbstractQpylib(object, metaclass=ABCMeta):
                 self.cached_manifest = json.load(manifest_file)
         return self.cached_manifest
 
-    @abstractmethod
     def _get_manifest_location(self):
-        pass
+        return 'manifest.json'
 
     def _get_manifest_field_value(self, key, default_value=None):
         manifest = self.get_manifest_json()
@@ -101,15 +98,14 @@ class AbstractQpylib(object, metaclass=ABCMeta):
 
     def get_store_path(self, relative_path):
         if relative_path == '':
-            return os.path.join(self._root_path(), 'store')
-        return os.path.join(self._root_path(), 'store', relative_path)
+            return self.get_root_path('store')
+        return os.path.join(self.get_root_path('store'), relative_path)
 
     def get_root_path(self, relative_path):
         return os.path.join(self._root_path(), relative_path)
 
-    @abstractmethod
     def _root_path(self):
-        pass
+        return '/'
 
     @abstractmethod
     def get_app_base_url(self):

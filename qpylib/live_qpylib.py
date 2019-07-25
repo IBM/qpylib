@@ -12,7 +12,6 @@ from socket import gethostbyname, gethostname
 class LiveQpylib(AbstractQpylib):
     LOGFILE_LOCATION = '/store/log/app.log'
     APP_CERT_LOCATION = '/etc/pki/tls/certs/ca-bundle.crt'
-    APP_MANIFEST_LOCATION = 'app/manifest.json'
 
     QRADAR_CONSOLE_FQDN = 'QRADAR_CONSOLE_FQDN'
     QRADAR_CSRF = 'QRadarCSRF'
@@ -42,18 +41,6 @@ class LiveQpylib(AbstractQpylib):
         return
 
     # ==== App details ====
-
-    def get_app_id(self):
-        return self._get_manifest_field_value('app_id', 0)
-
-    def get_app_name(self):
-        return self._get_manifest_field_value('name')
-    
-    def _get_manifest_location(self):
-        return self.APP_MANIFEST_LOCATION
-
-    def _root_path(self):
-        return "/"
 
     def get_app_base_url(self):
         """

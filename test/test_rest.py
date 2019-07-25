@@ -15,9 +15,9 @@ from werkzeug import http
 @pytest.fixture(scope='module', autouse=True)
 def pre_testing_setup():
     with patch('qpylib.abstract_qpylib.AbstractQpylib.log'):
-        with patch('qpylib.live_qpylib.LiveQpylib._root_path') as mock_root_path:
+        with patch('qpylib.abstract_qpylib.AbstractQpylib._root_path') as mock_root_path:
             mock_root_path.return_value = os.path.dirname(__file__)
-            with patch('qpylib.live_qpylib.LiveQpylib._get_manifest_location') as mock_get_manifest_location:
+            with patch('qpylib.abstract_qpylib.AbstractQpylib._get_manifest_location') as mock_get_manifest_location:
                 mock_get_manifest_location.return_value = 'manifests/installed.json'
                 yield
 

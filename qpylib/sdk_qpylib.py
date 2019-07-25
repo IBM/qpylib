@@ -47,18 +47,6 @@ class SdkQpylib(AbstractQpylib):
 
     # ==== App details ====
 
-    def get_app_id(self):
-        return "DEV_APP"
-
-    def get_app_name(self):
-        return "SDK_APP"
-    
-    def _get_manifest_location(self):
-        return 'manifest.json'
-
-    def _root_path(self):
-        return os.getenv('QRADAR_APPFW_WORKSPACE', '~')
-
     def get_app_base_url(self):
         return "http://localhost:5000"
 
