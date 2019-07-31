@@ -36,7 +36,7 @@ def env_qradar_console_fqdn():
 @responses.activate
 def test_rest_uses_env_vars_when_set(env_sec_admin_token, env_qradar_console_fqdn):
     responses.add('GET', 'https://9.101.234.169/testing_endpoint', status=200)
-    response = qpylib.REST('GET', 'testing_endpoint', verify='dummycert')
+    response = qpylib.REST('GET', 'testing_endpoint', verify='dummycert', headers = {'Host': '127.0.0.1'})
     assert response.status_code == 200
     assert responses.calls[0].request.method == 'GET'
     assert responses.calls[0].request.url == 'https://9.101.234.169/testing_endpoint'
@@ -49,7 +49,7 @@ def test_rest_uses_sec_cookie_when_env_var_not_set(env_qradar_console_fqdn):
     app = Flask(__name__)
     with app.test_request_context(headers={"COOKIE": cookie}):
         responses.add('GET', 'https://9.101.234.169/testing_endpoint', status=200)
-        response = qpylib.REST('GET', 'testing_endpoint', verify='dummycert')
+        response = qpylib.REST('GET', 'testing_endpoint', verify='dummycert', headers = {'Host': '127.0.0.1'})
         assert response.status_code == 200
         assert responses.calls[0].request.method == 'GET'
         assert responses.calls[0].request.url == 'https://9.101.234.169/testing_endpoint'
@@ -58,7 +58,7 @@ def test_rest_uses_sec_cookie_when_env_var_not_set(env_qradar_console_fqdn):
 @responses.activate
 def test_rest_uses_manifest_console_ip_when_env_var_not_set():
     responses.add('GET', 'https://9.123.234.101/testing_endpoint', status=200)
-    response = qpylib.REST('GET', 'testing_endpoint', verify='dummycert')
+    response = qpylib.REST('GET', 'testing_endpoint', verify='dummycert', headers = {'Host': '127.0.0.1'})
     assert response.status_code == 200
     assert responses.calls[0].request.method == 'GET'
     assert responses.calls[0].request.url == 'https://9.123.234.101/testing_endpoint'
@@ -66,7 +66,7 @@ def test_rest_uses_manifest_console_ip_when_env_var_not_set():
 @responses.activate
 def test_rest_sets_version_header(env_qradar_console_fqdn):
     responses.add('GET', 'https://9.101.234.169/testing_endpoint', status=200)
-    response = qpylib.REST('GET', 'testing_endpoint', verify='dummycert', version='12')
+    response = qpylib.REST('GET', 'testing_endpoint', verify='dummycert', version='12', headers = {'Host': '127.0.0.1'})
     assert response.status_code == 200
     assert responses.calls[0].request.method == 'GET'
     assert responses.calls[0].request.url == 'https://9.101.234.169/testing_endpoint'
@@ -75,7 +75,7 @@ def test_rest_sets_version_header(env_qradar_console_fqdn):
 @responses.activate
 def test_rest_allows_post(env_qradar_console_fqdn):
     responses.add('POST', 'https://9.101.234.169/testing_endpoint', status=201)
-    response = qpylib.REST('POST', 'testing_endpoint', verify='dummycert')
+    response = qpylib.REST('POST', 'testing_endpoint', verify='dummycert', headers = {'Host': '127.0.0.1'})
     assert response.status_code == 201
     assert responses.calls[0].request.method == 'POST'
     assert responses.calls[0].request.url == 'https://9.101.234.169/testing_endpoint'
@@ -83,7 +83,7 @@ def test_rest_allows_post(env_qradar_console_fqdn):
 @responses.activate
 def test_rest_allows_put(env_qradar_console_fqdn):
     responses.add('PUT', 'https://9.101.234.169/testing_endpoint', status=201)
-    response = qpylib.REST('PUT', 'testing_endpoint', verify='dummycert')
+    response = qpylib.REST('PUT', 'testing_endpoint', verify='dummycert', headers = {'Host': '127.0.0.1'})
     assert response.status_code == 201
     assert responses.calls[0].request.method == 'PUT'
     assert responses.calls[0].request.url == 'https://9.101.234.169/testing_endpoint'
@@ -91,11 +91,11 @@ def test_rest_allows_put(env_qradar_console_fqdn):
 @responses.activate
 def test_rest_allows_delete(env_qradar_console_fqdn):
     responses.add('DELETE', 'https://9.101.234.169/testing_endpoint', status=204)
-    response = qpylib.REST('DELETE', 'testing_endpoint', verify='dummycert')
+    response = qpylib.REST('DELETE', 'testing_endpoint', verify='dummycert', headers = {'Host': '127.0.0.1'})
     assert response.status_code == 204
     assert responses.calls[0].request.method == 'DELETE'
     assert responses.calls[0].request.url == 'https://9.101.234.169/testing_endpoint'
 
 def test_rest_rejects_unsupported_method(env_qradar_console_fqdn):
     with pytest.raises(ValueError, match='Unsupported REST action was requested'):
-        qpylib.REST('PATCH', 'testing_endpoint', verify='dummycert')
+        qpylib.REST('PATCH', 'testing_endpoint', verify='dummycert', headers = {'Host': '127.0.0.1'})
