@@ -19,7 +19,12 @@ QTEST_DIR = os.path.dirname(__file__)
 def pre_testing_setup():
     with patch('qpylib.abstract_qpylib.AbstractQpylib.log'):
         yield
-    
+
+@pytest.fixture(scope='function', autouse=True)
+def clear_manifest_cache():
+    with patch('qpylib.abstract_qpylib.cached_manifest', None):
+        yield
+
 # ==== get_app_id ====
 
 @patch(GET_MANIFEST_LOCATION, return_value = 'manifests/installed.json')

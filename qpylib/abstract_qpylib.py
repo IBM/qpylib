@@ -12,63 +12,63 @@ from . import asset_qpylib
 from . import json_qpylib
 from . import offense_qpylib
 
-class AbstractQpylib(object, metaclass=ABCMeta):
+loggerName = 'com.ibm.applicationLogger'
+logger = 0
+cached_manifest = None
 
-    def __init__(self):
-        self.LOGGER_NAME = 'com.ibm.applicationLogger'
-        self.qlogger = 0
-        self.cached_manifest = None
+class AbstractQpylib(object, metaclass=ABCMeta):
 
     # ==== Logging ====
 
     def log(self, message, level='info'):
-        log_fn = self._choose_log_level(level)
+        log_fn = self._choose_log_fn(level)
         log_fn("127.0.0.1 [APP_ID/{0}][NOT:{1}] {2}".format(
             self.get_app_id(), self._map_notification_code(level), message))
 
     def create_log(self):
-        self.qlogger = logging.getLogger(self.LOGGER_NAME)
-        self._add_log_handler(self.qlogger)
-        self.log("Created log {0}".format(self.LOGGER_NAME), 'info')
+        global logger
+        global loggerName
+        logger = logging.getLogger(loggerName)
+        self._add_log_handler(logger)
+        self.log("Created log {0}".format(loggerName), 'info')
 
     def set_log_level(self, log_level='INFO'):
-        self.qlogger.setLevel(self._map_log_level(log_level))
+        logger.setLevel(self._map_log_level(log_level))
 
     @abstractmethod
     def _add_log_handler(self, loc_logger):
         pass
 
-    def _choose_log_level(self, level='INFO'):
-        if self.qlogger == 0:
+    def _choose_log_fn(self, level='INFO'):
+        global logger
+        if logger == 0:
             raise SystemError('You cannot use log before logging has been initialised')
         return {
-            'INFO': self.qlogger.info,
-            'DEBUG': self.qlogger.debug,
-            'ERROR': self.qlogger.error,
-            'WARNING': self.qlogger.warning,
-            'CRITICAL': self.qlogger.critical,
-            'EXCEPTION': self.qlogger.exception,
-        }.get(level.upper(), self.qlogger.info)
+            'INFO': logger.info,
+            'DEBUG': logger.debug,
+            'ERROR': logger.error,
+            'WARNING': logger.warning,
+            'CRITICAL': logger.critical,
+            'EXCEPTION': logger.exception,
+        }.get(level.upper(), logger.info)
 
     def _map_notification_code(self, log_level='INFO'):
-        log_level = log_level.upper()
         return {
             'INFO': "0000006000",
             'DEBUG': "0000006000",
             'ERROR': "0000003000",
             'WARNING': "0000004000",
             'CRITICAL': "0000003000",
-        }.get(log_level, "0000006000")
+        }.get(log_level.upper(), "0000006000")
 
     def _map_log_level(self, log_level='INFO'):
-        log_level = log_level.upper()
         return {
             'INFO': logging.INFO,
             'DEBUG': logging.DEBUG,
             'ERROR': logging.ERROR,
             'WARNING': logging.WARNING,
             'CRITICAL': logging.CRITICAL,
-        }.get(log_level, logging.INFO)
+        }.get(log_level.upper(), logging.INFO)
 
     # ==== App details ====
 
@@ -79,11 +79,12 @@ class AbstractQpylib(object, metaclass=ABCMeta):
         return self._get_manifest_field_value('name')
 
     def get_manifest_json(self):
-        if self.cached_manifest is None:
+        global cached_manifest
+        if cached_manifest is None:
             full_manifest_location = self.get_root_path(self._get_manifest_location())
             with open(full_manifest_location) as manifest_file:
-                self.cached_manifest = json.load(manifest_file)
-        return self.cached_manifest
+                cached_manifest = json.load(manifest_file)
+        return cached_manifest
 
     def _get_manifest_location(self):
         return 'manifest.json'
