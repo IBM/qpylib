@@ -48,9 +48,6 @@ class LiveQpylib(AbstractQpylib):
     def _get_host_header(self):
         return request.headers.get('X-Console-Host')
 
-    def get_console_address(self):
-        return self._get_manifest_field_value('console_ip', '127.0.0.1')
-
     # ==== REST ====
 
     def REST(self, rest_type, request_url, headers=None, data=None,

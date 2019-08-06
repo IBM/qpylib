@@ -140,9 +140,8 @@ class AbstractQpylib(object, metaclass=ABCMeta):
     def _get_endpoint_url(self, endpoint, **values):
         return url_for(endpoint, **values)
 
-    @abstractmethod
     def get_console_address(self):
-        pass
+        return self._get_manifest_field_value('console_ip', '127.0.0.1')
 
     # ==== REST ====
 

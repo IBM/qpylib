@@ -18,13 +18,11 @@ def pre_testing_setup():
         del os.environ['QRADAR_APPFW_SDK']
 
 @responses.activate
-@patch('qpylib.sdk_qpylib.SdkQpylib.get_console_address', return_value = '9.101.234.169')
-@patch('qpylib.sdk_qpylib.SdkQpylib._get_api_auth', return_value = ('testuser', 'testing123'))
-def test_rest_uses_input_values(mock_api_auth, mock_console_address):
+@patch('qpylib.abstract_qpylib.AbstractQpylib.get_console_address', return_value = '9.101.234.169')
+def test_rest_uses_input_values(mock_console_address):
     responses.add('GET', 'https://9.101.234.169/testing_endpoint',
                        json={'success': True}, status=200)
 
     response = qpylib.REST('GET', 'testing_endpoint', verify='dummycert')
     assert responses.calls[0].request.url == 'https://9.101.234.169/testing_endpoint'
-    assert 'Basic' in responses.calls[0].request.headers['Authorization']
     assert response.status_code == 200
