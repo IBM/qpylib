@@ -8,7 +8,6 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 import getpass
 import json
-import logging
 import os
 import requests
 import socket
@@ -19,31 +18,18 @@ from OpenSSL.crypto import dump_certificate, FILETYPE_PEM
 from OpenSSL.SSL import (Context, Connection)
 from OpenSSL.SSL import SSLv23_METHOD
 
-DEV_AUTH_FILE = ".qradar_appfw.auth"
-DEV_CONSOLE_FILE = ".qradar_appfw.console"
-CONSOLE_CERT_FILE = ".qradar_appfw.console_cert.{0}.pem"
-YES_OPTIONS = ("y", "yes")
-
-VAULT_PORT = 9381
-ROOT_PEM_URL = 'http://{0}:{1}/vault-qrd_ca.pem'
-INTERMEDIATE_PEM_URL = 'http://{0}:{1}/vault-qrd_ca_int.pem'
-
 api_auth_user = 0
 api_auth_password = 0
 consoleIP = 0
-handler_added = 0
 
 class SdkQpylib(AbstractQpylib):
-
-    # ==== Logging ====
-
-    def _add_log_handler(self, loc_logger):
-        global handler_added
-        if 0 == handler_added:
-            loc_logger.setLevel(self._map_log_level('debug'))
-            handler = logging.StreamHandler()
-            loc_logger.addHandler(handler)
-            handler_added=1
+    DEV_AUTH_FILE = ".qradar_appfw.auth"
+    DEV_CONSOLE_FILE = ".qradar_appfw.console"
+    CONSOLE_CERT_FILE = ".qradar_appfw.console_cert.{0}.pem"
+    YES_OPTIONS = ("y", "yes")
+    VAULT_PORT = 9381
+    ROOT_PEM_URL = 'http://{0}:{1}/vault-qrd_ca.pem'
+    INTERMEDIATE_PEM_URL = 'http://{0}:{1}/vault-qrd_ca_int.pem'
 
     # ==== App details ====
 
@@ -52,9 +38,8 @@ class SdkQpylib(AbstractQpylib):
 
     def get_console_address(self):
         global consoleIP
-        global DEV_CONSOLE_FILE
         home = os.path.expanduser("~")
-        console_file_path = os.path.join(home, DEV_CONSOLE_FILE)
+        console_file_path = os.path.join(home, self.DEV_CONSOLE_FILE)
         if os.path.isfile(console_file_path):
             print("Loading console details from file: {0}".format(str(console_file_path)))
             sys.stdout.flush()
@@ -72,7 +57,7 @@ class SdkQpylib(AbstractQpylib):
                 print("[y/n]:")
                 sys.stdout.flush()
                 do_store = input()
-                if do_store in YES_OPTIONS:
+                if do_store in self.YES_OPTIONS:
                     with open(console_file_path, 'w+') as console_file:
                         json.dump(console_data, console_file)
         return consoleIP
@@ -96,11 +81,10 @@ class SdkQpylib(AbstractQpylib):
 
     def _get_api_auth(self):
         auth = None
-        global DEV_AUTH_FILE
         global api_auth_user
         global api_auth_password
         home = os.path.expanduser("~")
-        auth_file_path = os.path.join(home, DEV_AUTH_FILE)
+        auth_file_path = os.path.join(home, self.DEV_AUTH_FILE)
         if os.path.isfile(auth_file_path):
             print("Loading user details from file: {0}".format(auth_file_path))
             sys.stdout.flush()
@@ -124,7 +108,7 @@ class SdkQpylib(AbstractQpylib):
                 print("[y/n]:")
                 sys.stdout.flush()
                 do_store = input()
-                if do_store in YES_OPTIONS:
+                if do_store in self.YES_OPTIONS:
                     with open(auth_file_path, 'w+') as auth_file:
                         json.dump(auth_data, auth_file)
             auth = (api_auth_user, api_auth_password)
@@ -132,8 +116,7 @@ class SdkQpylib(AbstractQpylib):
         return auth
 
     def _get_cert_filepath(self, host):
-        global CONSOLE_CERT_FILE
-        console_cert_file_path = os.path.join(os.path.expanduser("~"), CONSOLE_CERT_FILE.format(host))
+        console_cert_file_path = os.path.join(os.path.expanduser("~"), self.CONSOLE_CERT_FILE.format(host))
 
         if os.path.isfile(console_cert_file_path + ".ignore"):
             return False
@@ -157,17 +140,13 @@ class SdkQpylib(AbstractQpylib):
 
     # If unable to connect to server, this function raises a socket error.
     def _store_cert_from_server(self, host, console_cert_file_path):
-        global ROOT_PEM_URL
-        global INTERMEDIATE_PEM_URL
-        global VAULT_PORT
-
         # Try to get the root and intermediate certs introduced in 7.3.2.
         # If that fails fall back to the pre-7.3.2 cert.
         use_pre_732_cert = False
         try:
-            pem_data = requests.get(url = ROOT_PEM_URL.format(host, VAULT_PORT)).text
+            pem_data = requests.get(url = self.ROOT_PEM_URL.format(host, self.VAULT_PORT)).text
             pem_text = self._normalize_pem_data(pem_data)
-            intermediate_pem_data = requests.get(url = INTERMEDIATE_PEM_URL.format(host, VAULT_PORT)).text
+            intermediate_pem_data = requests.get(url = self.INTERMEDIATE_PEM_URL.format(host, self.VAULT_PORT)).text
             intermediate_pem_text = self._normalize_pem_data(intermediate_pem_data)
         except requests.ConnectionError:
             use_pre_732_cert = True
@@ -184,7 +163,7 @@ class SdkQpylib(AbstractQpylib):
         sys.stdout.flush()
 
         do_store = input().strip().lower()
-        if do_store not in YES_OPTIONS:
+        if do_store not in self.YES_OPTIONS:
             print("Not storing cert file for {0}. Aborting request.".format(host))
             sys.stdout.flush()
             raise ValueError("Certificate was rejected")

@@ -6,38 +6,54 @@ from abc import ABCMeta, abstractmethod
 from flask import url_for
 import json
 import logging
+from logging.handlers import RotatingFileHandler, SysLogHandler
 import requests
 import os
 from . import asset_qpylib
 from . import json_qpylib
 from . import offense_qpylib
 
-loggerName = 'com.ibm.applicationLogger'
 logger = 0
 cached_manifest = None
 
 class AbstractQpylib(object, metaclass=ABCMeta):
+    LOGGER_NAME = 'com.ibm.applicationLogger'
+    LOGFILE_LOCATION = '/store/log/app.log'
+    APP_FILE_LOG_FORMAT = '%(asctime)s [%(module)s.%(funcName)s] [%(threadName)s] [%(levelname)s] - %(message)s'
+    APP_CONSOLE_LOG_FORMAT = '%(asctime)s %(module)s.%(funcName)s: %(message)s'
 
     # ==== Logging ====
 
     def log(self, message, level='info'):
         log_fn = self._choose_log_fn(level)
-        log_fn("127.0.0.1 [APP_ID/{0}][NOT:{1}] {2}".format(
+        log_fn("[APP_ID/{0}][NOT:{1}] {2}".format(
             self.get_app_id(), self._map_notification_code(level), message))
 
     def create_log(self):
         global logger
-        global loggerName
-        logger = logging.getLogger(loggerName)
+        logger = logging.getLogger(self.LOGGER_NAME)
         self._add_log_handler(logger)
-        self.log("Created log {0}".format(loggerName), 'info')
 
     def set_log_level(self, log_level='INFO'):
+        global logger
         logger.setLevel(self._map_log_level(log_level))
 
-    @abstractmethod
     def _add_log_handler(self, loc_logger):
-        pass
+        loc_logger.setLevel(self._map_log_level(self._get_manifest_field_value('log_level', 'info')))
+
+        handler = RotatingFileHandler(self.LOGFILE_LOCATION, maxBytes=2*1024*1024, backupCount=5)
+        handler.setFormatter(logging.Formatter(self.APP_FILE_LOG_FORMAT))
+        loc_logger.addHandler(handler)
+
+        # Ipv6 address - Strip [] for syslog
+        console_ip = self.get_console_address()
+        if console_ip.startswith('[') and console_ip.endswith(']'):
+            console_ip = console_ip[1:-1]
+
+        syslogHandler = SysLogHandler(address=(console_ip, 514))
+        syslogHandler.setFormatter(logging.Formatter(self.APP_CONSOLE_LOG_FORMAT))
+        loc_logger.addHandler(syslogHandler)
+        return
 
     def _choose_log_fn(self, level='INFO'):
         global logger

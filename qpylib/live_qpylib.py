@@ -4,41 +4,15 @@
 
 from .abstract_qpylib import AbstractQpylib
 from flask import request, has_request_context
-from logging import Formatter
-from logging.handlers import RotatingFileHandler, SysLogHandler
 import os
 from socket import gethostbyname, gethostname
 
 class LiveQpylib(AbstractQpylib):
-    LOGFILE_LOCATION = '/store/log/app.log'
     APP_CERT_LOCATION = '/etc/pki/tls/certs/ca-bundle.crt'
-
     QRADAR_CONSOLE_FQDN = 'QRADAR_CONSOLE_FQDN'
     QRADAR_CSRF = 'QRadarCSRF'
     SEC_HEADER = 'SEC'
     SEC_ADMIN_TOKEN = 'SEC_ADMIN_TOKEN'
-
-    APP_FILE_LOG_FORMAT = '%(asctime)s [%(module)s.%(funcName)s] [%(threadName)s] [%(levelname)s] - %(message)s'
-    APP_CONSOLE_LOG_FORMAT = '%(asctime)s %(module)s.%(funcName)s: %(message)s'
-    
-    # ==== Logging ====
-
-    def _add_log_handler(self, loc_logger):
-        loc_logger.setLevel(self._map_log_level(self._get_manifest_field_value('log_level', 'info')))
-        
-        handler = RotatingFileHandler(self.LOGFILE_LOCATION, maxBytes=2*1024*1024, backupCount=5)
-        handler.setFormatter(Formatter(self.APP_FILE_LOG_FORMAT))
-        loc_logger.addHandler(handler)
-
-        # Ipv6 address - Strip [] for syslog
-        console_ip = self.get_console_address()
-        if console_ip.startswith('[') and console_ip.endswith(']'):
-            console_ip = console_ip[1:-1]
-
-        syslogHandler = SysLogHandler(address=(console_ip, 514))
-        syslogHandler.setFormatter(Formatter(self.APP_CONSOLE_LOG_FORMAT))
-        loc_logger.addHandler(syslogHandler)
-        return
 
     # ==== App details ====
 
