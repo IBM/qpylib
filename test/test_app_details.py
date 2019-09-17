@@ -2,28 +2,29 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 #
-# pylint: disable=unused-argument
+# pylint: disable=unused-argument, redefined-outer-name
 
 from unittest.mock import patch
 import os
 import pytest
 from qpylib import qpylib
 
-GET_MANIFEST_LOCATION = 'qpylib.abstract_qpylib.AbstractQpylib._get_manifest_location'
-APP_ROOT_PATH = 'qpylib.abstract_qpylib.AbstractQpylib._root_path'
-GET_HOST_HEADER = 'qpylib.live_qpylib.LiveQpylib._get_host_header'
-GET_ENDPOINT_URL = 'qpylib.abstract_qpylib.AbstractQpylib._get_endpoint_url'
+GET_MANIFEST_LOCATION = 'qpylib.app_qpylib._get_manifest_location'
+APP_ROOT_PATH = 'qpylib.app_qpylib._root_path'
+GET_HOST_HEADER = 'qpylib.app_qpylib._get_host_header'
+GET_ENDPOINT_URL = 'qpylib.app_qpylib.get_endpoint_url'
 QTEST_DIR = os.path.dirname(__file__)
-
-@pytest.fixture(scope='module', autouse=True)
-def pre_testing_setup():
-    with patch('qpylib.abstract_qpylib.AbstractQpylib.log'):
-        yield
 
 @pytest.fixture(scope='function', autouse=True)
 def clear_manifest_cache():
-    with patch('qpylib.abstract_qpylib.cached_manifest', None):
+    with patch('qpylib.app_qpylib.q_cached_manifest', None):
         yield
+
+@pytest.fixture(scope='function')
+def env_qradar_console_ip():
+    os.environ['QRADAR_CONSOLE_IP'] = '9.123.234.101'
+    yield
+    del os.environ['QRADAR_CONSOLE_IP']
 
 # ==== get_app_id ====
 
@@ -88,37 +89,50 @@ def test_get_app_base_url_returns_empty_string_when_app_id_missing_from_manifest
 
 @patch(GET_MANIFEST_LOCATION, return_value = 'manifests/installed_no_console_ip.json')
 @patch(APP_ROOT_PATH, return_value = QTEST_DIR)
-def test_get_app_base_url_returns_empty_string_when_console_ip_missing_from_manifest(mock_root_path, mock_get_manifest_location):
+def test_get_app_base_url_returns_empty_string_when_host_cannot_be_determined(mock_root_path, mock_get_manifest_location):
     assert qpylib.get_app_base_url() == ''
 
-@patch(GET_MANIFEST_LOCATION, return_value = 'manifests/installed.json')
+@patch(GET_MANIFEST_LOCATION, return_value = 'manifests/installed_no_console_ip.json')
 @patch(APP_ROOT_PATH, return_value = QTEST_DIR)
-def test_get_app_base_url_uses_console_ip_when_x_console_host_header_missing(mock_root_path, mock_get_manifest_location):
-    assert qpylib.get_app_base_url() == 'https://9.123.234.101/console/plugins/1005/app_proxy'
+def test_get_app_base_url_uses_console_ip_when_x_console_host_header_missing(mock_root_path, mock_get_manifest_location,
+                                                                             env_qradar_console_ip):
+    assert qpylib.get_app_base_url() == 'https://9.123.234.101/console/plugins/1007/app_proxy'
 
-@patch(GET_MANIFEST_LOCATION, return_value = 'manifests/installed.json')
+@patch(GET_MANIFEST_LOCATION, return_value = 'manifests/installed_no_console_ip.json')
 @patch(APP_ROOT_PATH, return_value = QTEST_DIR)
 @patch(GET_HOST_HEADER, return_value = '9.10.11.12')
-def test_get_app_base_url_uses_x_console_host_header_if_present(mock_get_host_header, mock_root_path, mock_get_manifest_location):
-    assert qpylib.get_app_base_url() == 'https://9.10.11.12/console/plugins/1005/app_proxy'
+def test_get_app_base_url_uses_x_console_host_header_if_present(mock_get_host_header, mock_root_path,
+                                                                mock_get_manifest_location, env_qradar_console_ip):
+    assert qpylib.get_app_base_url() == 'https://9.10.11.12/console/plugins/1007/app_proxy'
 
 # ==== q_url_for ====
 
 @patch(GET_MANIFEST_LOCATION, return_value = 'manifests/installed.json')
 @patch(APP_ROOT_PATH, return_value = QTEST_DIR)
 @patch(GET_ENDPOINT_URL, return_value = '/index')
-def test_q_url_for(mock_flask_url_for, mock_root_path, mock_get_manifest_location):
+def test_q_url_for(mock_flask_url_for, mock_root_path, mock_get_manifest_location, env_qradar_console_ip):
     assert qpylib.q_url_for('index') == 'https://9.123.234.101/console/plugins/1005/app_proxy/index'
 
 # ==== get_console_address ====
 
-@patch(GET_MANIFEST_LOCATION, return_value = 'manifests/installed.json')
-@patch(APP_ROOT_PATH, return_value = QTEST_DIR)
-def test_get_console_address_returns_value_from_manifest(mock_root_path, mock_get_manifest_location):
-    assert qpylib.get_console_address() == "9.123.234.101"
+def test_get_console_address_with_env_var_set(env_qradar_console_ip):
+    assert qpylib.get_console_address() == '9.123.234.101'
 
-@patch(GET_MANIFEST_LOCATION, return_value = 'manifests/installed_no_console_ip.json')
-@patch(APP_ROOT_PATH, return_value = QTEST_DIR)
-def test_get_console_address_returns_default_when_field_missing_from_manifest(mock_root_path, mock_get_manifest_location):
-    assert qpylib.get_console_address() == '127.0.0.1'
-    
+def test_get_console_address_with_env_var_missing():
+    with pytest.raises(KeyError, match='Environment variable QRADAR_CONSOLE_IP is not set'):
+        qpylib.get_console_address()
+
+# ==== get_console_fqdn ====
+
+@pytest.fixture(scope='function')
+def env_qradar_console_fqdn():
+    os.environ['QRADAR_CONSOLE_FQDN'] = 'myhost.ibm.com'
+    yield
+    del os.environ['QRADAR_CONSOLE_FQDN']
+
+def test_get_console_fqdn_with_env_var_set(env_qradar_console_fqdn):
+    assert qpylib.get_console_fqdn() == 'myhost.ibm.com'
+
+def test_get_console_fqdn_with_env_var_missing():
+    with pytest.raises(KeyError, match='Environment variable QRADAR_CONSOLE_FQDN is not set'):
+        qpylib.get_console_fqdn()

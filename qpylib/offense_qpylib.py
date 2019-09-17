@@ -12,7 +12,7 @@ def get_offense_url(offense_id):
     return 'api/siem/offenses/{0}'.format(offense_id)
 
 def get_offense_url_full(offense_id):
-    return 'https://{0}/{1}'.format(qpylib.get_console_address(), get_offense_url(offense_id))
+    return 'https://{0}/{1}'.format(qpylib.get_console_fqdn(), get_offense_url(offense_id))
 
 def get_offense_json(offense_id):
     response = qpylib.REST('get', get_offense_url(offense_id))
@@ -32,6 +32,16 @@ def get_offense_html_header(offense_id):
     html_header += '<div class="heading" id="' + offense_id + 'headingdiv">' + qpylib.get_app_name() + '</div>'
     html_header += '</div>'
     return html_header
+
+def get_offense_rendering(offense_id, render_type):
+    rendering_fn = _choose_offense_rendering(render_type)
+    return rendering_fn(offense_id)
+
+def _choose_offense_rendering(render_type):
+    return {
+        'HTML': get_offense_json_html,
+        'JSONLD': get_offense_json_ld,
+    }.get(render_type.upper(), get_offense_json_html)
 
 def get_offense_json_ld(offense_id):
     offense_json = get_offense_json(offense_id)

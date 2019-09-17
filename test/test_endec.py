@@ -14,7 +14,7 @@ DB_STORE = 'test_user_e.db'
 
 @pytest.fixture(scope='module', autouse=True)
 def pre_testing_setup():
-    with patch('qpylib.abstract_qpylib.AbstractQpylib.log'):
+    with patch('qpylib.qpylib.log'):
         yield
 
 # Mock out get_store_path to return encryption db in test dir, then delete after each test

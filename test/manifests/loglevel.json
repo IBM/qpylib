@@ -1,0 +1,9 @@
+{
+    "name": "Debug Manifest",
+    "description": "A sample debug manifest",
+    "version": "1.0",
+    "uuid": "ddff161f-871a-435c-866b-c65b4ceca959",
+    "app_id": 1008,
+    "console_ip": "9.123.234.101",
+    "log_level": "DEBUG"
+}
