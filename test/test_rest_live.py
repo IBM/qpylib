@@ -55,7 +55,7 @@ def test_rest_uses_sec_cookie_when_env_var_not_set(env_qradar_console_fqdn):
         assert responses.calls[0].request.headers['SEC'] == test_sec_cookie_value
 
 @responses.activate
-def test_rest_fails_when_env_var_not_set():
+def test_rest_fails_when_fqdn_env_var_not_set():
     with pytest.raises(KeyError, match='Environment variable QRADAR_CONSOLE_FQDN is not set'):
         qpylib.REST('GET', 'testing_endpoint', verify='dummycert', headers = {'Host': '127.0.0.1'})
 

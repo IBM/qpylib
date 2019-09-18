@@ -96,8 +96,8 @@ def get_console_fqdn():
 
 # ==== REST ====
 
-def REST(rest_action, request_url, headers=None, data=None, params=None,
-         json_body=None, version=None, verify=None, timeout=60):
+def REST(rest_action, request_url, version=None, headers=None, data=None,
+         params=None, json_body=None, verify=None, timeout=60):
     ''' Invokes a rest_action request to request_url using the Python requests module.
         Returns a requests.Response object.
         Raises ValueError if rest_action is not one of GET, PUT, POST, DELETE.
@@ -106,9 +106,8 @@ def REST(rest_action, request_url, headers=None, data=None, params=None,
         rest_func = rest_qpylib.sdk_rest
     else:
         rest_func = rest_qpylib.live_rest
-    return rest_func(rest_action, request_url, headers=headers,
-                     data=data, params=params, json_body=json_body,
-                     version=version, verify=verify, timeout=timeout)
+    return rest_func(rest_action, request_url, version, headers, data,
+                     params, json_body, verify, timeout)
 
 # ==== JSON ====
 

@@ -69,15 +69,25 @@ def get_app_base_url():
     if app_id == '':
         return ''
 
+    host = _get_host()
+    if host is None:
+        return ''
+
+    return "https://{0}/console/plugins/{1}/app_proxy".format(host, app_id)
+
+def _get_host():
     try:
         host = _get_host_header()
     except: # pylint: disable=W0702
+        host = None
+
+    if host is None:
         try:
             host = get_console_ip()
         except KeyError:
-            return ''
+            return None
 
-    return "https://{0}/console/plugins/{1}/app_proxy".format(host, app_id)
+    return host
 
 def _get_host_header():
     return request.headers.get('X-Console-Host')
