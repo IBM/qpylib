@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import logging
+import os
 from logging.handlers import RotatingFileHandler, SysLogHandler
 from . import app_qpylib
 from . import util_qpylib
@@ -42,7 +43,7 @@ def default_log_level():
     return _map_log_level(app_qpylib.get_manifest_field_value('log_level', 'INFO'))
 
 def _log_file_location():
-    return '/store/log/app.log'
+    return os.path.join(app_qpylib.get_store_path('log'), 'app.log')
 
 def _choose_log_fn(level):
     global qlogger
