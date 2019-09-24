@@ -5,6 +5,7 @@
 import logging
 from logging.handlers import RotatingFileHandler, SysLogHandler
 from . import app_qpylib
+from . import util_qpylib
 
 APP_FILE_LOG_FORMAT = '%(asctime)s [%(module)s.%(funcName)s] [%(threadName)s] [%(levelname)s] - %(message)s'
 APP_CONSOLE_LOG_FORMAT = '%(asctime)s %(module)s.%(funcName)s: %(message)s'
@@ -25,13 +26,13 @@ def create_log():
     handler.setFormatter(logging.Formatter(APP_FILE_LOG_FORMAT))
     qlogger.addHandler(handler)
 
-    # Ipv6 address - Strip [] for syslog
-    console_ip = app_qpylib.get_console_ip()
-    if console_ip.startswith('[') and console_ip.endswith(']'):
-        console_ip = console_ip[1:-1]
-    syslogHandler = SysLogHandler(address=(console_ip, 514))
-    syslogHandler.setFormatter(logging.Formatter(APP_CONSOLE_LOG_FORMAT))
-    qlogger.addHandler(syslogHandler)
+    if not util_qpylib.is_sdk():
+        console_ip = app_qpylib.get_console_ip()
+        if util_qpylib.is_ipv6_address(console_ip):
+            console_ip = console_ip[1:-1]
+        syslogHandler = SysLogHandler(address=(console_ip, 514))
+        syslogHandler.setFormatter(logging.Formatter(APP_CONSOLE_LOG_FORMAT))
+        qlogger.addHandler(syslogHandler)
 
 def set_log_level(level='INFO'):
     global qlogger

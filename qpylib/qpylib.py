@@ -2,20 +2,13 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-import os
 from . import app_qpylib
 from . import asset_qpylib
 from . import json_qpylib
 from . import log_qpylib
 from . import offense_qpylib
 from . import rest_qpylib
-
-def is_sdk():
-    ''' Returns True if code is executing via the SDK rather than
-        in a live app deployment. Depends on the QRADAR_APPFW_SDK
-        environment variable.
-    '''
-    return os.getenv('QRADAR_APPFW_SDK', 'no').lower() == 'true'
+from . import util_qpylib
 
 # ==== Logging ====
     
@@ -102,7 +95,7 @@ def REST(rest_action, request_url, version=None, headers=None, data=None,
         Returns a requests.Response object.
         Raises ValueError if rest_action is not one of GET, PUT, POST, DELETE.
     '''
-    if is_sdk():
+    if util_qpylib.is_sdk():
         rest_func = rest_qpylib.sdk_rest
     else:
         rest_func = rest_qpylib.live_rest
