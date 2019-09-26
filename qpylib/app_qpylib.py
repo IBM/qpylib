@@ -33,16 +33,20 @@ def get_manifest_field_value(key, default_value=None):
         return default_value
     raise KeyError('{0} is a required manifest field'.format(key))
 
-def get_store_path(relative_path):
-    if relative_path == '':
-        return get_root_path('store')
-    return os.path.join(get_root_path('store'), relative_path)
+def get_store_path(*path_entries):
+    return _build_path(get_root_path('store'), *path_entries)
 
-def get_root_path(relative_path):
-    return os.path.join(_root_path(), relative_path)
+def get_root_path(*path_entries):
+    return _build_path(_root_path(), *path_entries)
 
 def _root_path():
-    return '/'
+    return '/opt/app-root/src'
+
+def _build_path(base_path, *path_entries):
+    path = base_path
+    for path_entry in path_entries:
+        path = os.path.join(path, path_entry)
+    return path
 
 def get_endpoint_url(endpoint, **values):
     return url_for(endpoint, **values)

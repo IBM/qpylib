@@ -66,19 +66,19 @@ def test_get_manifest_json_no_cache(mock_root_path, mock_get_manifest_location):
 
 # ==== get_store_path ====
 
-def test_get_store_path_with_no_relative_path_returns_slash_store():
-    assert qpylib.get_store_path() == '/store'
+def test_get_store_path_with_no_relative_path():
+    assert qpylib.get_store_path() == '/opt/app-root/src/store'
 
-def test_get_store_path_with_relative_path_appends_relative_path():
-    assert qpylib.get_store_path('my/other/directory') == '/store/my/other/directory'
+def test_get_store_path_with_relative_path():
+    assert qpylib.get_store_path('my', 'other', 'directory') == '/opt/app-root/src/store/my/other/directory'
 
 # ==== get_root_path ====
 
-def test_get_root_path_with_no_relative_path_returns_slash():
-    assert qpylib.get_root_path() == '/'
+def test_get_root_path_with_no_relative_path():
+    assert qpylib.get_root_path() == '/opt/app-root/src'
 
-def test_get_root_path_with_relative_path_appends_relative_path():
-    assert qpylib.get_root_path('my/other/directory') == '/my/other/directory'
+def test_get_root_path_with_relative_path():
+    assert qpylib.get_root_path('my', 'other', 'directory') == '/opt/app-root/src/my/other/directory'
 
 # ==== get_app_base_url ====
 

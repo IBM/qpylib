@@ -59,13 +59,13 @@ def get_manifest_field_value(key, default_value=None):
     '''
     return app_qpylib.get_manifest_field_value(key, default_value)
 
-def get_store_path(relative_path=''):
-    ''' Returns the app store path, joined with relative_path. '''
-    return app_qpylib.get_store_path(relative_path)
+def get_store_path(*path_entries):
+    ''' Returns the app store path, joined with path_entries. '''
+    return app_qpylib.get_store_path(*path_entries)
 
-def get_root_path(relative_path=''):
-    ''' Returns the app root path, joined with relative_path. '''
-    return app_qpylib.get_root_path(relative_path)
+def get_root_path(*path_entries):
+    ''' Returns the app root path, joined with path_entries. '''
+    return app_qpylib.get_root_path(*path_entries)
 
 def get_app_base_url():
     """ Returns the QRadar app proxy prefix. """
