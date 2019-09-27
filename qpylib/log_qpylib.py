@@ -42,7 +42,7 @@ def default_log_level():
     return _map_log_level(app_qpylib.get_manifest_field_value('log_level', 'INFO'))
 
 def _log_file_location():
-    return app_qpylib.get_store_path('log', 'app.log')
+    return app_qpylib.get_log_path('app.log')
 
 def _choose_log_fn(level):
     global qlogger

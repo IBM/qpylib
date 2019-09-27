@@ -17,13 +17,10 @@ def get_app_name():
 def get_manifest_json():
     global q_cached_manifest
     if q_cached_manifest is None:
-        full_manifest_location = get_root_path(_get_manifest_location())
+        full_manifest_location = get_root_path('manifest.json')
         with open(full_manifest_location) as manifest_file:
             q_cached_manifest = json.load(manifest_file)
     return q_cached_manifest
-
-def _get_manifest_location():
-    return 'manifest.json'
 
 def get_manifest_field_value(key, default_value=None):
     manifest = get_manifest_json()
@@ -33,17 +30,17 @@ def get_manifest_field_value(key, default_value=None):
         return default_value
     raise KeyError('{0} is a required manifest field'.format(key))
 
-def get_store_path(*path_entries):
-    return _build_path(get_root_path('store'), *path_entries)
-
 def get_root_path(*path_entries):
-    return _build_path(_root_path(), *path_entries)
+    return _build_path('src', *path_entries)
 
-def _root_path():
-    return '/opt/app-root/src'
+def get_store_path(*path_entries):
+    return _build_path('store', *path_entries)
+
+def get_log_path(*path_entries):
+    return _build_path('log', *path_entries)
 
 def _build_path(base_path, *path_entries):
-    path = base_path
+    path = os.path.join(get_env_var('APP_ROOT'), base_path)
     for path_entry in path_entries:
         path = os.path.join(path, path_entry)
     return path

@@ -14,11 +14,9 @@ from werkzeug import http
 
 @pytest.fixture(scope='module', autouse=True)
 def pre_testing_setup():
-    with patch('qpylib.app_qpylib._root_path') as mock_root_path:
-        mock_root_path.return_value = os.path.dirname(__file__)
-        with patch('qpylib.app_qpylib._get_manifest_location') as mock_get_manifest_location:
-            mock_get_manifest_location.return_value = 'manifests/installed.json'
-            yield
+    with patch('qpylib.app_qpylib.get_root_path') as mock_manifest:
+        mock_manifest.return_value = os.path.join(os.path.dirname(__file__), 'manifests', 'installed.json')
+        yield
 
 @pytest.fixture()
 def env_sec_admin_token():

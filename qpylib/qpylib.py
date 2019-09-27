@@ -59,13 +59,19 @@ def get_manifest_field_value(key, default_value=None):
     '''
     return app_qpylib.get_manifest_field_value(key, default_value)
 
-def get_store_path(*path_entries):
-    ''' Returns the app store path, joined with path_entries. '''
-    return app_qpylib.get_store_path(*path_entries)
-
 def get_root_path(*path_entries):
-    ''' Returns the app root path, joined with path_entries. '''
+    ''' Returns the app's root path, joined with path_entries if supplied.
+        The app's root path is the location of the app directory and
+        manifest.json file.
+        Raises KeyError if environment variable APP_ROOT is not set.
+    '''
     return app_qpylib.get_root_path(*path_entries)
+
+def get_store_path(*path_entries):
+    ''' Returns the app's store path, joined with path_entries if supplied.
+        Raises KeyError if environment variable APP_ROOT is not set.
+    '''
+    return app_qpylib.get_store_path(*path_entries)
 
 def get_app_base_url():
     """ Returns the QRadar app proxy prefix. """

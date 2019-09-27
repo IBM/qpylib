@@ -12,6 +12,11 @@ from qpylib import qpylib, log_qpylib
 
 APP_FILE_LOG_FORMAT = '[{0}] - [APP_ID/1001][NOT:{1}] {2}'
 
+GET_MANIFEST_JSON = 'qpylib.app_qpylib.get_root_path'
+
+def manifest_path(manifest_file):
+    return os.path.join(os.path.dirname(__file__), 'manifests', manifest_file)
+
 # This fixture avoids reading app id from the manifest.
 # Setting default log level threshold is handled by separate fixtures.
 @pytest.fixture(scope='module', autouse=True)
@@ -65,19 +70,13 @@ def test_create_without_console_ip_env_var_raises_error(info_threshold, tmpdir):
         with pytest.raises(KeyError, match='Environment variable QRADAR_CONSOLE_IP is not set'):
             qpylib.create_log()
 
-def test_default_log_level_no_level_in_manifest(set_console_ip):
-    with patch('qpylib.app_qpylib._root_path') as mock_root_path:
-        mock_root_path.return_value = os.path.dirname(__file__)
-        with patch('qpylib.app_qpylib._get_manifest_location') as mock_get_manifest_location:
-            mock_get_manifest_location.return_value = 'manifests/installed.json'
-            assert log_qpylib.default_log_level() == logging.INFO
+@patch(GET_MANIFEST_JSON, return_value = manifest_path('installed.json'))
+def test_default_log_level_no_level_in_manifest(mock_manifest, set_console_ip):
+    assert log_qpylib.default_log_level() == logging.INFO
 
-def test_default_log_level_read_from_manifest(set_console_ip):
-    with patch('qpylib.app_qpylib._root_path') as mock_root_path:
-        mock_root_path.return_value = os.path.dirname(__file__)
-        with patch('qpylib.app_qpylib._get_manifest_location') as mock_get_manifest_location:
-            mock_get_manifest_location.return_value = 'manifests/loglevel.json'
-            assert log_qpylib.default_log_level() == logging.DEBUG
+@patch(GET_MANIFEST_JSON, return_value = manifest_path('loglevel.json'))
+def test_default_log_level_read_from_manifest(mock_manifest, set_console_ip):
+    assert log_qpylib.default_log_level() == logging.DEBUG
                 
 def test_all_log_levels_with_manifest_info_threshold(set_console_ip, info_threshold, tmpdir):
     log_path = os.path.join(tmpdir.strpath, 'app.log')
