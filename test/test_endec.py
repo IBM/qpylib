@@ -65,11 +65,6 @@ def test_encrypt_creates_valid_config_on_start(set_unset_qradar_app_uuid_env_var
     Encryption({"name": "test_name", "user": "test_user"})
     assert os.path.isfile(DB_STORE)
 
-def test_encryption_returns_empty_string_encrypting_empty_string(set_unset_qradar_app_uuid_env_var,
-                                                                 patch_get_store_path):
-    enc = Encryption({"name": "test_name", "user": "test_user"})
-    assert enc.encrypt('') == ''
-
 def test_encryption_stores_encrypted_secret_in_config(set_unset_qradar_app_uuid_env_var,
                                                       patch_get_store_path):
     enc = Encryption({"name": "test_name", "user": "test_user"})
