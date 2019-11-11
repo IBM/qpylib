@@ -122,10 +122,6 @@ class Encryption(object):
 
     def encrypt(self, clear_text):
         """ Encrypts a clear text secret """
-        if clear_text.strip(' \t\n\r') == '':
-            qpylib.log('encdec : encrypt : Unable to encrypt an empty string')
-            return str('')
-
         try:
             self.config[self.name]['version'] = Encryption.engine_version
             self.config[self.name]['secret'] = self.__encrypt_string(clear_text)
