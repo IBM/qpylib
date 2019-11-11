@@ -12,6 +12,7 @@ from qpylib.encdec import Encryption
 
 DB_STORE = 'test_user_e.db'
 
+
 @pytest.fixture(scope='module', autouse=True)
 def pre_testing_setup():
     with patch('qpylib.abstract_qpylib.AbstractQpylib.log'):
@@ -26,6 +27,15 @@ def patch_get_store_path():
         yield
         if os.path.isfile(file_path):
             os.remove(file_path)
+
+@pytest.fixture()
+def repeatable_encrypt():
+    e = Encryption({"name": "test_name", "user": "test_user"})
+    e.config["test_name"]['salt'] = 'Lk&RBjmg,22Xcs`!'
+    e.config["test_name"]['UUID'] = '6599ba78-4896-11e8-842f-0ed5f89f718b'
+    e.config["test_name"]['ivz'] = 'AXN(=,ix7=s,e}g\\'
+    e.config["test_name"]['iterations'] = 100000
+    return e
 
 @pytest.fixture()
 def set_unset_qradar_app_uuid_env_var():
@@ -117,3 +127,10 @@ def test_decrypt_raise_value_error_on_engine_version_mismatch(set_unset_qradar_a
     with pytest.raises(ValueError) as ex:
         enc.decrypt()
     assert "Encryption : secret engine mismatch." in str(ex.value)
+
+def test_encrypt_decrypt_null_char(set_unset_qradar_app_uuid_env_var,
+                                   patch_get_store_path, repeatable_encrypt):
+    enc_string = repeatable_encrypt.encrypt('\x00')
+    assert enc_string == 'cd09251dde83002c7d426a3d065a89bb'
+    dec_string = repeatable_encrypt.decrypt()
+    assert dec_string == '\x00'
