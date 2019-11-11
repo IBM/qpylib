@@ -134,3 +134,10 @@ def test_encrypt_decrypt_null_char(set_unset_qradar_app_uuid_env_var,
     assert enc_string == 'cd062a12d18c0f23724d6532095586b4'
     dec_string = repeatable_encrypt.decrypt()
     assert dec_string == '\x00'
+
+def test_encrypt_decrypt_empty_string(set_unset_qradar_app_uuid_env_var,
+                                      patch_get_store_path, repeatable_encrypt):
+    enc_string = repeatable_encrypt.encrypt('')
+    assert enc_string == 'dd19350dce93103c6d527a2d164a99ab'
+    dec_string = repeatable_encrypt.decrypt()
+    assert dec_string == ''
