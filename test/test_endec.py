@@ -131,6 +131,6 @@ def test_decrypt_raise_value_error_on_engine_version_mismatch(set_unset_qradar_a
 def test_encrypt_decrypt_null_char(set_unset_qradar_app_uuid_env_var,
                                    patch_get_store_path, repeatable_encrypt):
     enc_string = repeatable_encrypt.encrypt('\x00')
-    assert enc_string == 'cd09251dde83002c7d426a3d065a89bb'
+    assert enc_string == 'cd062a12d18c0f23724d6532095586b4'
     dec_string = repeatable_encrypt.decrypt()
     assert dec_string == '\x00'
