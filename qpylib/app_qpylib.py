@@ -37,7 +37,7 @@ def get_store_path(*path_entries):
     return _build_path('store', *path_entries)
 
 def get_log_path(*path_entries):
-    return _build_path('log', *path_entries)
+    return get_store_path('log')
 
 def _build_path(base_path, *path_entries):
     path = os.path.join(get_env_var('APP_ROOT'), base_path)
