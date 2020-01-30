@@ -37,13 +37,10 @@ def get_store_path(*path_entries):
     return _build_path('store', *path_entries)
 
 def get_log_path(*path_entries):
-    return get_store_path('log')
+    return _build_path('store', 'log', *path_entries)
 
-def _build_path(base_path, *path_entries):
-    path = os.path.join(get_env_var('APP_ROOT'), base_path)
-    for path_entry in path_entries:
-        path = os.path.join(path, path_entry)
-    return path
+def _build_path(*path_entries):
+    return os.path.join(get_env_var('APP_ROOT'), *path_entries)
 
 def get_endpoint_url(endpoint, **values):
     return url_for(endpoint, **values)
