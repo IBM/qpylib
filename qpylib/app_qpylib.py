@@ -31,7 +31,7 @@ def get_manifest_field_value(key, default_value=None):
     raise KeyError('{0} is a required manifest field'.format(key))
 
 def get_root_path(*path_entries):
-    return _build_path('src', *path_entries)
+    return _build_path(*path_entries)
 
 def get_store_path(*path_entries):
     return _build_path('store', *path_entries)

@@ -71,10 +71,10 @@ def test_get_root_path_with_env_var_missing():
         qpylib.get_root_path()
 
 def test_get_root_path_with_no_relative_path(env_app_root):
-    assert qpylib.get_root_path() == '/opt/app-root/src'
+    assert qpylib.get_root_path() == '/opt/app-root'
 
 def test_get_root_path_with_relative_path(env_app_root):
-    assert qpylib.get_root_path('my', 'other', 'directory') == '/opt/app-root/src/my/other/directory'
+    assert qpylib.get_root_path('my', 'other', 'directory') == '/opt/app-root/my/other/directory'
 
 # ==== get_store_path ====
 
