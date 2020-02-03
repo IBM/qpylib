@@ -2,8 +2,8 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+from . import app_qpylib
 from . import json_qpylib
-from . import qpylib
 
 # Context location yet to be finalised.
 JSON_LD_CONTEXT = 'http://qradar/context/location'
@@ -13,7 +13,7 @@ def get_asset_url(asset_id):
     return 'api/asset_model/assets/{0}'.format(asset_id)
 
 def get_asset_url_full(asset_id):
-    return 'https://{0}/{1}'.format(qpylib.get_console_fqdn(), get_asset_url(asset_id))
+    return 'https://{0}/{1}'.format(app_qpylib.get_console_fqdn(), get_asset_url(asset_id))
 
 def get_asset_json(asset_id):
     # Actual implementation commented out for now - see get_asset_url above
@@ -44,7 +44,7 @@ def get_asset_json_ld(asset_id):
                                'Asset details for id ' + asset_id,
                                asset_json)
 
-def get_asset_json_html(asset_id, generate_html = None):
+def get_asset_json_html(asset_id, generate_html=None):
     asset_json = get_asset_json(asset_id)
     if generate_html is None:
         asset_html = get_asset_html_example(asset_json)

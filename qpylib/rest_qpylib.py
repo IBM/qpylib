@@ -2,11 +2,13 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from flask import request, has_request_context
 import os
-import requests
 from socket import gethostbyname, gethostname
+from flask import request, has_request_context
+import requests
 from . import app_qpylib
+
+# pylint: disable=too-many-arguments
 
 QRADAR_CSRF = 'QRadarCSRF'
 SEC_HEADER = 'SEC'
@@ -88,7 +90,7 @@ def _choose_rest_function(rest_action):
         'PUT': requests.put,
         'POST': requests.post,
         'DELETE': requests.delete,
-    }.get(rest_action.upper(), _unsupported_REST)
+    }.get(rest_action.upper(), _unsupported_rest_action)
 
-def _unsupported_REST(*args, **kw_args):
+def _unsupported_rest_action(*args, **kw_args):
     raise ValueError('Unsupported REST action was requested')

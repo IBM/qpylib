@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 #
-# pylint: disable=redefined-outer-name, unused-argument
+# pylint: disable=redefined-outer-name, unused-argument, invalid-name
 
 from unittest.mock import patch
 import logging
@@ -45,11 +45,12 @@ def set_console_ip():
 
 @pytest.fixture(scope='function', autouse=True)
 def reset_globals():
-    with patch('qpylib.log_qpylib.qlogger', 0):
-        with patch('qpylib.app_qpylib.q_cached_manifest', None):
+    with patch('qpylib.log_qpylib.QLOGGER', 0):
+        with patch('qpylib.app_qpylib.Q_CACHED_MANIFEST', None):
             yield
 
-def verify_log_file_content(log_path, expected_lines, not_expected_lines = []): # pylint: disable=dangerous-default-value
+# pylint: disable=protected-access
+def verify_log_file_content(log_path, expected_lines, not_expected_lines=[]): # pylint: disable=dangerous-default-value
     with open(log_path) as log_file:
         content = log_file.read()
         for line in expected_lines:
@@ -70,14 +71,14 @@ def test_create_without_console_ip_env_var_raises_error(info_threshold, tmpdir):
         with pytest.raises(KeyError, match='Environment variable QRADAR_CONSOLE_IP is not set'):
             qpylib.create_log()
 
-@patch(GET_MANIFEST_JSON, return_value = manifest_path('installed.json'))
+@patch(GET_MANIFEST_JSON, return_value=manifest_path('installed.json'))
 def test_default_log_level_no_level_in_manifest(mock_manifest, set_console_ip):
     assert log_qpylib.default_log_level() == logging.INFO
 
-@patch(GET_MANIFEST_JSON, return_value = manifest_path('loglevel.json'))
+@patch(GET_MANIFEST_JSON, return_value=manifest_path('loglevel.json'))
 def test_default_log_level_read_from_manifest(mock_manifest, set_console_ip):
     assert log_qpylib.default_log_level() == logging.DEBUG
-                
+
 def test_all_log_levels_with_manifest_info_threshold(set_console_ip, info_threshold, tmpdir):
     log_path = os.path.join(tmpdir.strpath, 'app.log')
     with patch('qpylib.log_qpylib._log_file_location') as mock_log_location:
@@ -95,8 +96,8 @@ def test_all_log_levels_with_manifest_info_threshold(set_console_ip, info_thresh
             {'level': 'WARNING', 'text': 'hello warning'},
             {'level': 'ERROR', 'text': 'hello error'},
             {'level': 'CRITICAL', 'text': 'hello critical'}],
-            not_expected_lines=[{'level': 'DEBUG', 'text': 'hello debug'}])
-                
+                                not_expected_lines=[{'level': 'DEBUG', 'text': 'hello debug'}])
+
 def test_all_log_levels_with_manifest_debug_threshold(set_console_ip, debug_threshold, tmpdir):
     log_path = os.path.join(tmpdir.strpath, 'app.log')
     with patch('qpylib.log_qpylib._log_file_location') as mock_log_location:
@@ -115,7 +116,7 @@ def test_all_log_levels_with_manifest_debug_threshold(set_console_ip, debug_thre
             {'level': 'WARNING', 'text': 'hello warning'},
             {'level': 'ERROR', 'text': 'hello error'},
             {'level': 'CRITICAL', 'text': 'hello critical'}])
-                
+
 def test_all_log_levels_with_set_debug_threshold(set_console_ip, info_threshold, tmpdir):
     log_path = os.path.join(tmpdir.strpath, 'app.log')
     with patch('qpylib.log_qpylib._log_file_location') as mock_log_location:
@@ -135,7 +136,7 @@ def test_all_log_levels_with_set_debug_threshold(set_console_ip, info_threshold,
             {'level': 'WARNING', 'text': 'hello warning'},
             {'level': 'ERROR', 'text': 'hello error'},
             {'level': 'CRITICAL', 'text': 'hello critical'}])
-                
+
 def test_all_log_levels_with_set_warning_threshold(set_console_ip, info_threshold, tmpdir):
     log_path = os.path.join(tmpdir.strpath, 'app.log')
     with patch('qpylib.log_qpylib._log_file_location') as mock_log_location:
@@ -152,10 +153,10 @@ def test_all_log_levels_with_set_warning_threshold(set_console_ip, info_threshol
             {'level': 'WARNING', 'text': 'hello warning'},
             {'level': 'ERROR', 'text': 'hello error'},
             {'level': 'CRITICAL', 'text': 'hello critical'}],
-            not_expected_lines=[
-            {'level': 'DEBUG', 'text': 'hello debug'},
-            {'level': 'INFO', 'text': 'hello default info'},
-            {'level': 'INFO', 'text': 'hello info'}])
+                                not_expected_lines=[
+                                    {'level': 'DEBUG', 'text': 'hello debug'},
+                                    {'level': 'INFO', 'text': 'hello default info'},
+                                    {'level': 'INFO', 'text': 'hello info'}])
 
 def test_log_with_bad_level_uses_info(set_console_ip, info_threshold, tmpdir):
     log_path = os.path.join(tmpdir.strpath, 'app.log')
@@ -183,4 +184,4 @@ def test_set_log_level_with_bad_level_uses_info(set_console_ip, debug_threshold,
             {'level': 'WARNING', 'text': 'hello warning'},
             {'level': 'ERROR', 'text': 'hello error'},
             {'level': 'CRITICAL', 'text': 'hello critical'}],
-            not_expected_lines=[{'level': 'DEBUG', 'text': 'hello debug'}])
+                                not_expected_lines=[{'level': 'DEBUG', 'text': 'hello debug'}])

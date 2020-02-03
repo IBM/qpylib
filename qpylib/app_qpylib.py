@@ -2,11 +2,11 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from flask import request, url_for
 import json
 import os
+from flask import request, url_for
 
-q_cached_manifest = None
+Q_CACHED_MANIFEST = None
 
 def get_app_id():
     return get_manifest_field_value('app_id', 0)
@@ -15,12 +15,12 @@ def get_app_name():
     return get_manifest_field_value('name')
 
 def get_manifest_json():
-    global q_cached_manifest
-    if q_cached_manifest is None:
+    global Q_CACHED_MANIFEST
+    if Q_CACHED_MANIFEST is None:
         full_manifest_location = get_root_path('manifest.json')
         with open(full_manifest_location) as manifest_file:
-            q_cached_manifest = json.load(manifest_file)
-    return q_cached_manifest
+            Q_CACHED_MANIFEST = json.load(manifest_file)
+    return Q_CACHED_MANIFEST
 
 def get_manifest_field_value(key, default_value=None):
     manifest = get_manifest_json()

@@ -11,7 +11,7 @@ from . import rest_qpylib
 from . import util_qpylib
 
 # ==== Logging ====
-    
+
 def log(message, level='INFO'):
     ''' Logs a message at the given level, which defaults to INFO.
         Level values: DEBUG, INFO, WARNING, ERROR, CRITICAL.
@@ -95,6 +95,7 @@ def get_console_fqdn():
 
 # ==== REST ====
 
+# pylint: disable=invalid-name, too-many-arguments
 def REST(rest_action, request_url, version=None, headers=None, data=None,
          params=None, json_body=None, verify=None, timeout=60):
     ''' Invokes a rest_action request to request_url using the Python requests module.

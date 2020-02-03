@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 #
-# pylint: disable=redefined-outer-name, unused-argument
+# pylint: disable=redefined-outer-name, unused-argument, invalid-name
 
 import json
 from unittest.mock import patch
@@ -36,20 +36,20 @@ def set_unset_qradar_app_uuid_env_var():
 def test_encryption_raises_value_error_on_missing_name_and_user_fields():
     with pytest.raises(ValueError) as ex:
         Encryption({})
-    assert "Encryption : name and user are mandatory fields!" == str(ex.value)
+    assert str(ex.value) == "Encryption : name and user are mandatory fields!"
 
     with pytest.raises(ValueError) as ex:
         Encryption({"name": "test_name"})
-    assert "Encryption : name and user are mandatory fields!" == str(ex.value)
+    assert str(ex.value) == "Encryption : name and user are mandatory fields!"
 
     with pytest.raises(ValueError) as ex:
         Encryption({"user": "test_user"})
-    assert "Encryption : name and user are mandatory fields!" == str(ex.value)
+    assert str(ex.value) == "Encryption : name and user are mandatory fields!"
 
 def test_encryption_raises_value_error_on_missing_env_var():
     with pytest.raises(KeyError) as ex:
         Encryption({"name": "test_name", "user": "test_user"})
-    assert "'Encryption : QRADAR_APP_UUID not available in environment'" == str(ex.value)
+    assert str(ex.value) == "'Encryption : QRADAR_APP_UUID not available in environment'"
 
 def test_encrypt_creates_valid_config_on_start(set_unset_qradar_app_uuid_env_var, patch_get_store_path):
     Encryption({"name": "test_name", "user": "test_user"})
@@ -86,7 +86,7 @@ def test_decrypt_raises_error_when_config_missing(set_unset_qradar_app_uuid_env_
     enc = Encryption({"name": "test_name", "user": "test_user"})
     with pytest.raises(ValueError) as ex:
         enc.decrypt()
-    assert "Encryption : no secret to decrypt" == str(ex.value)
+    assert str(ex.value) == "Encryption : no secret to decrypt"
 
 def test_decrypt_returns_incorrect_plaintext_with_altered_salt(set_unset_qradar_app_uuid_env_var,
                                                                patch_get_store_path):
@@ -103,7 +103,7 @@ def test_decrypt_returns_incorrect_plaintext_with_altered_salt(set_unset_qradar_
     assert enc.decrypt() != 'testing123'
 
 def test_decrypt_raise_value_error_on_engine_version_mismatch(set_unset_qradar_app_uuid_env_var,
-                                                               patch_get_store_path):
+                                                              patch_get_store_path):
     enc = Encryption({"name": "test_name", "user": "test_user"})
     enc_string = enc.encrypt('testing123')
     assert enc_string != 'testing123'
