@@ -12,6 +12,7 @@ from qpylib.encdec import Encryption
 
 DB_STORE = 'test_user_e.db'
 
+
 @pytest.fixture(scope='module', autouse=True)
 def pre_testing_setup():
     with patch('qpylib.qpylib.log'):
@@ -26,6 +27,15 @@ def patch_get_store_path():
         yield
         if os.path.isfile(file_path):
             os.remove(file_path)
+
+@pytest.fixture()
+def repeatable_encrypt():
+    e = Encryption({"name": "test_name", "user": "test_user"})
+    e.config["test_name"]['salt'] = 'Lk&RBjmg,22Xcs`!'
+    e.config["test_name"]['UUID'] = '6599ba78-4896-11e8-842f-0ed5f89f718b'
+    e.config["test_name"]['ivz'] = 'AXN(=,ix7=s,e}g\\'
+    e.config["test_name"]['iterations'] = 100000
+    return e
 
 @pytest.fixture()
 def set_unset_qradar_app_uuid_env_var():
@@ -54,11 +64,6 @@ def test_encryption_raises_value_error_on_missing_env_var():
 def test_encrypt_creates_valid_config_on_start(set_unset_qradar_app_uuid_env_var, patch_get_store_path):
     Encryption({"name": "test_name", "user": "test_user"})
     assert os.path.isfile(DB_STORE)
-
-def test_encryption_returns_empty_string_encrypting_empty_string(set_unset_qradar_app_uuid_env_var,
-                                                                 patch_get_store_path):
-    enc = Encryption({"name": "test_name", "user": "test_user"})
-    assert enc.encrypt('') == ''
 
 def test_encryption_stores_encrypted_secret_in_config(set_unset_qradar_app_uuid_env_var,
                                                       patch_get_store_path):
@@ -117,3 +122,24 @@ def test_decrypt_raise_value_error_on_engine_version_mismatch(set_unset_qradar_a
     with pytest.raises(ValueError) as ex:
         enc.decrypt()
     assert "Encryption : secret engine mismatch." in str(ex.value)
+
+def test_encrypt_decrypt_null_char(set_unset_qradar_app_uuid_env_var,
+                                   patch_get_store_path, repeatable_encrypt):
+    enc_string = repeatable_encrypt.encrypt('\x00')
+    assert enc_string == 'cd062a12d18c0f23724d6532095586b4'
+    dec_string = repeatable_encrypt.decrypt()
+    assert dec_string == '\x00'
+
+def test_encrypt_decrypt_empty_string(set_unset_qradar_app_uuid_env_var,
+                                      patch_get_store_path, repeatable_encrypt):
+    enc_string = repeatable_encrypt.encrypt('')
+    assert enc_string == 'dd19350dce93103c6d527a2d164a99ab'
+    dec_string = repeatable_encrypt.decrypt()
+    assert dec_string == ''
+
+def test_encrypt_decrypt_whitespace(set_unset_qradar_app_uuid_env_var,
+                                      patch_get_store_path, repeatable_encrypt):
+    enc_string = repeatable_encrypt.encrypt('  \n \t ')
+    assert enc_string == 'ed292f3dd7a30a26774860370c5083b1'
+    dec_string = repeatable_encrypt.decrypt()
+    assert dec_string == '  \n \t '
