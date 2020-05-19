@@ -7,6 +7,9 @@ import json
 import os
 import string
 import uuid
+
+from Crypto.Util.Padding import pad, unpad
+
 from . import qpylib
 
 from Crypto.Random import random
@@ -99,8 +102,8 @@ class Encryption(object):
             AES.MODE_CFB,
             self.config[self.name]['ivz'].encode('utf-8'),
             segment_size=128)
-        clear_text_padded_string = self.__pad_string(clear_text_string)
-        encrypted_bytes = aes.encrypt(clear_text_padded_string.encode("utf8"))
+        clear_text_padded_string = pad(clear_text_string.encode('utf-8'), AES.block_size)
+        encrypted_bytes = aes.encrypt(clear_text_padded_string)
         encrypted_hex_bytes = b2a_hex(encrypted_bytes).rstrip()
         return encrypted_hex_bytes.decode('utf-8')
 
@@ -114,28 +117,11 @@ class Encryption(object):
             segment_size=128)
         encrypted_hex_bytes = encrypted_string.encode('utf-8')
         encrypted_bytes = a2b_hex(encrypted_hex_bytes)
-        decrypted_bytes = aes.decrypt(encrypted_bytes)
-        clear_text_padded_string = decrypted_bytes.decode('utf-8')
-        return self.__unpad_string(clear_text_padded_string)
-
-    def __pad_string(self, value):
-        """ Adds padding to the string so that the resulting length is a multiple of 16 """
-        length = len(value)
-        pad_size = 16 - (length % 16)
-        return value.ljust(length + pad_size, '\x00')
-
-    def __unpad_string(self, value):
-        """ Removes the added padding from the string """
-        while value[-1] == '\x00':
-            value = value[:-1]
-        return value
+        decrypted_bytes = unpad(aes.decrypt(encrypted_bytes), AES.block_size)
+        return decrypted_bytes.decode('utf-8')
 
     def encrypt(self, clear_text):
         """ Encrypts a clear text secret """
-        if clear_text.strip(' \t\n\r') == '':
-            qpylib.log('encdec : encrypt : Unable to encrypt an empty string')
-            return str('')
-
         try:
             self.config[self.name]['version'] = Encryption.engine_version
             self.config[self.name]['secret'] = self.__encrypt_string(clear_text)
