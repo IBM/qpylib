@@ -138,7 +138,7 @@ def test_encrypt_decrypt_empty_string(set_unset_qradar_app_uuid_env_var,
     assert dec_string == ''
 
 def test_encrypt_decrypt_whitespace(set_unset_qradar_app_uuid_env_var,
-                                      patch_get_store_path, repeatable_encrypt):
+                                    patch_get_store_path, repeatable_encrypt):
     enc_string = repeatable_encrypt.encrypt('  \n \t ')
     assert enc_string == 'ed292f3dd7a30a26774860370c5083b1'
     dec_string = repeatable_encrypt.decrypt()
