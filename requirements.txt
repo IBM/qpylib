@@ -4,4 +4,5 @@ cryptography
 pyOpenSSL
 pycryptodome
 pylint
+pytest
 responses

@@ -4,15 +4,22 @@
 
 # QRadar App Python Library (qpylib)
 
-QPyLib provides a library of Python utility functions to assist in developing QRadar applications.
+A library of Python utility functions to assist in developing QRadar applications
+by providing a simplified interface to the QRadar App Framework and REST API.
 
-The utility functions ensure compatibility with QRadar and provide a simplified interface to the QRadar REST API and App Framework.
+## Compatibility
+
+The qpylib library hosted here is for use only with apps that have been written in
+Python 3 to run on Red Hat Universal Base Image. It is not compatible with apps
+written to run on a CentOS base image.
+
+**NOTE**: until the first official qpylib release, planned for early Q3 2020,
+any code contained herein is unsupported and subject to change.
+
+## Project details
 
 * [LICENSE](LICENSE)
 * [CONTRIBUTING](CONTRIBUTING.md)
 * [MAINTAINERS](MAINTAINERS.md)
 * [CHANGELOG](CHANGELOG.md)
 
-## Getting started
-
-See Setup section in [CONTRIBUTING](CONTRIBUTING.md#Setup).

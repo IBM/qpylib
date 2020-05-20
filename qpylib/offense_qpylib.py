@@ -2,17 +2,22 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from . import qpylib
+from . import app_qpylib
 from . import json_qpylib
+# pylint: disable=cyclic-import
+from . import qpylib
 
 # Context location yet to be finalised
 JSON_LD_CONTEXT = 'http://qradar/context/location'
+OFFENSE_HEADER_TEMPLATE = ('<div class="gridHeader" id="{0}gridheaderdiv" style="clear:both;">'
+                           '<div class="heading" id="{0}headingdiv">{1}</div>'
+                           '</div>')
 
 def get_offense_url(offense_id):
     return 'api/siem/offenses/{0}'.format(offense_id)
 
 def get_offense_url_full(offense_id):
-    return 'https://{0}/{1}'.format(qpylib.get_console_address(), get_offense_url(offense_id))
+    return 'https://{0}/{1}'.format(app_qpylib.get_console_fqdn(), get_offense_url(offense_id))
 
 def get_offense_json(offense_id):
     response = qpylib.REST('get', get_offense_url(offense_id))
@@ -28,10 +33,17 @@ def get_offense_html_example(offense_json):
             '</tbody></table>')
 
 def get_offense_html_header(offense_id):
-    html_header = '<div class="gridHeader" id="' + offense_id + 'gridheaderdiv" style="clear:both;">'
-    html_header += '<div class="heading" id="' + offense_id + 'headingdiv">' + qpylib.get_app_name() + '</div>'
-    html_header += '</div>'
-    return html_header
+    return OFFENSE_HEADER_TEMPLATE.format(offense_id, app_qpylib.get_app_name())
+
+def get_offense_rendering(offense_id, render_type):
+    rendering_fn = _choose_offense_rendering(render_type)
+    return rendering_fn(offense_id)
+
+def _choose_offense_rendering(render_type):
+    return {
+        'HTML': get_offense_json_html,
+        'JSONLD': get_offense_json_ld,
+    }.get(render_type.upper(), get_offense_json_html)
 
 def get_offense_json_ld(offense_id):
     offense_json = get_offense_json(offense_id)
@@ -42,7 +54,7 @@ def get_offense_json_ld(offense_id):
                                'Offense details for id ' + str(offense_id),
                                offense_json)
 
-def get_offense_json_html(offense_id, generate_html = None, generate_heading = True):
+def get_offense_json_html(offense_id, generate_html=None, generate_heading=True):
     offense_html = ''
     if generate_heading:
         offense_html = get_offense_html_header(offense_id)

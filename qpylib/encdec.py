@@ -7,30 +7,27 @@ import json
 import os
 import string
 import uuid
-
-from Crypto.Util.Padding import pad, unpad
-
-from . import qpylib
-
 from Crypto.Random import random
 from Crypto.Cipher import AES
 from Crypto.Protocol import KDF
+from Crypto.Util.Padding import pad, unpad
+from . import qpylib
 
 # The encryption class is now version aware.
 # EACH BREAKING CHANGE IN THE CRYPTOGRAPHIC METHODS SHOULD INCREMENT THE VERSION
 # This enables better error handling for users. Users can also query the
 # engine version to make decisions on how to handle secrets
-class Encryption(object):
+class Encryption():
     engine_version = 3
     def __init__(self, data):
         if 'name' not in data or 'user' not in data or data['name'] == '' or data['user'] == '':
             raise ValueError("Encryption : name and user are mandatory fields!")
-        self.APP_UUID_ENV_VARIABLE = 'QRADAR_APP_UUID'
-        if self.APP_UUID_ENV_VARIABLE not in os.environ:
-            raise KeyError("Encryption : {0} not available in environment".format(self.APP_UUID_ENV_VARIABLE))
+        self.app_uuid_env_var = 'QRADAR_APP_UUID'
+        if self.app_uuid_env_var not in os.environ:
+            raise KeyError("Encryption : {0} not available in environment".format(self.app_uuid_env_var))
         self.name = data['name']
         self.user_id = data['user']
-        self.app_uuid = os.environ.get(self.APP_UUID_ENV_VARIABLE)
+        self.app_uuid = os.environ.get(self.app_uuid_env_var)
         self.config_path = qpylib.get_store_path(str(self.user_id) + '_e.db')
         self.config = {}
         self.__load_config()
@@ -78,7 +75,8 @@ class Encryption(object):
                     token = self.__generate_token()
         return token
 
-    def __generate_random(self):
+    @staticmethod
+    def __generate_random():
         """ Returns a string containing a random hash that uses letters, digits and special characters """
         random_hash = ''.join(
             (
@@ -138,7 +136,9 @@ class Encryption(object):
             raise ValueError("Encryption : no secret to decrypt")
 
         if self.config[self.name].get('version') != Encryption.engine_version:
-            raise ValueError("Encryption : secret engine mismatch. Secret was stored with version {}, attempted to decrypt with version {}.".format(self.config[self.name].get('version') , Encryption.engine_version))
+            raise ValueError(("Encryption : secret engine mismatch. "
+                              "Secret was stored with version {}, attempted to decrypt with version {}.")
+                             .format(self.config[self.name].get('version'), Encryption.engine_version))
 
         try:
             return self.__decrypt_string(self.config[self.name]['secret'])
