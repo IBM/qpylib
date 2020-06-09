@@ -38,8 +38,8 @@ class Encryption():
                     store file can hold multiple encrypted items.
         '''
         try:
-            self.name = str(data['name'])
-            self.user_id = str(data['user'])
+            self.name = str(data['name']).strip()
+            self.user_id = str(data['user']).strip()
         except (KeyError, TypeError):
             raise EncryptionError('You must supply name and user strings')
 

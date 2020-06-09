@@ -43,8 +43,5 @@ class Enginev3():
     @staticmethod
     def generate_config():
         characters = string.ascii_letters + string.digits + string.punctuation
-        config = {}
-        config['version'] = 3
-        config['salt'] = ''.join(secrets.choice(characters) for _ in range(16))
-        config['iterations'] = 100000
-        return config
+        salt = ''.join(secrets.choice(characters) for _ in range(16))
+        return {'version': 3, 'salt': salt, 'iterations': 100000}

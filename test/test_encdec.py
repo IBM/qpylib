@@ -60,6 +60,16 @@ def test_init_raises_error_on_empty_user_field():
         Encryption({'name': 'secret_thing', 'user': ''})
     assert str(ex.value) == 'Supplied name and user cannot be empty'
 
+def test_init_raises_error_on_whitespace_name_field():
+    with pytest.raises(EncryptionError) as ex:
+        Encryption({'name': '   ', 'user': 'quser'})
+    assert str(ex.value) == 'Supplied name and user cannot be empty'
+
+def test_init_raises_error_on_whitespace_user_field():
+    with pytest.raises(EncryptionError) as ex:
+        Encryption({'name': 'secret_thing', 'user': '     '})
+    assert str(ex.value) == 'Supplied name and user cannot be empty'
+
 def test_init_raises_error_on_missing_uuid_env_var():
     with pytest.raises(EncryptionError) as ex:
         Encryption({'name': 'secret_thing', 'user': 'quser'})
@@ -115,14 +125,21 @@ def test_encrypt_stores_encrypted_secret(uuid_env_var, patch_get_store_path):
     enc_string = enc.encrypt('testing123')
     assert enc_string != 'testing123'
     with open(QUSER_DB_STORE) as db_file:
-        file_json = json.load(db_file)
-    assert file_json.get('secret_thing').get('secret') == enc_string
+        store_json = json.load(db_file)
+    assert store_json['secret_thing']['secret'] == enc_string
 
 def test_decrypt_returns_original_value_after_encryption(uuid_env_var, patch_get_store_path):
     enc = Encryption({'name': 'secret_thing', 'user': 'quser'})
     enc_string = enc.encrypt('testing123')
     assert enc_string != 'testing123'
     assert enc.decrypt() == 'testing123'
+
+def test_init_strips_leading_and_trailing_whitespace(uuid_env_var, patch_get_store_path):
+    enc = Encryption({'name': '  secret_thing  ', 'user': '  quser    '})
+    enc_string = enc.encrypt('testing123')
+    with open(QUSER_DB_STORE) as db_file:
+        store_json = json.load(db_file)
+    assert store_json['secret_thing']['secret'] == enc_string
 
 def test_decrypt_handles_enginev2_secrets(uuid_env_var, tmpdir):
     db_store = 'v2user_e.db'
