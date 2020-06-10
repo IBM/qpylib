@@ -1,8 +1,7 @@
 flask
 requests
-cryptography
-pyOpenSSL
 pycryptodome
+cryptography
 pylint
 pytest
 responses

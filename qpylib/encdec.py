@@ -2,147 +2,146 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from binascii import a2b_hex, b2a_hex
+# pylint: disable=broad-except
+
 import json
 import os
-import string
-import uuid
-from Crypto.Random import random
-from Crypto.Cipher import AES
-from Crypto.Protocol import KDF
-from Crypto.Util.Padding import pad, unpad
-from . import qpylib
+from qpylib import qpylib
+from qpylib.encryption.enginev2 import Enginev2
+from qpylib.encryption.enginev3 import Enginev3
 
-# The encryption class is now version aware.
-# EACH BREAKING CHANGE IN THE CRYPTOGRAPHIC METHODS SHOULD INCREMENT THE VERSION
-# This enables better error handling for users. Users can also query the
-# engine version to make decisions on how to handle secrets
+class EncryptionError(Exception):
+    ''' All errors encountered by Encryption are reported via this class '''
+
 class Encryption():
-    engine_version = 3
+    ''' Convenience functions for managing encrypted data items.
+
+        The first incarnation of encdec was distributed as a stand-alone module,
+        not part of qpylib. It is no longer supported. In retrospect, that version
+        has been designated as v1, and engine versions here start at v2.
+
+        Developer information
+        ---------------------
+        If the encryption algorithm needs to be changed, follow these steps:
+          - Create a new engine version in qpylib.encryption.
+          - In the previous engine version, remove all encryption-related
+            functions, leaving only decryption-related code.
+          - Update any engine-related code in this module.
+    '''
+    latest_engine_version = 3
+
     def __init__(self, data):
-        if 'name' not in data or 'user' not in data or data['name'] == '' or data['user'] == '':
-            raise ValueError("Encryption : name and user are mandatory fields!")
-        self.app_uuid_env_var = 'QRADAR_APP_UUID'
-        if self.app_uuid_env_var not in os.environ:
-            raise KeyError("Encryption : {0} not available in environment".format(self.app_uuid_env_var))
-        self.name = data['name']
-        self.user_id = data['user']
-        self.app_uuid = os.environ.get(self.app_uuid_env_var)
-        self.config_path = qpylib.get_store_path(str(self.user_id) + '_e.db')
-        self.config = {}
-        self.__load_config()
-
-    def __init_config(self):
-        """ Generates crypto config values and saves them to a file """
-        self.config[self.name] = {}
-        self.config[self.name]['salt'] = self.__generate_random()
-        self.config[self.name]['UUID'] = self.__generate_token()
-        self.config[self.name]['ivz'] = self.__generate_random()
-        self.config[self.name]['iterations'] = 100000
-        self.__save_config()
-
-    def __load_config(self):
-        """ Loads config file from disk or creates the file if it doesn't exist """
+        ''' data is an object containing two non-empty strings:
+            'name': a label for the item you want to encrypt.
+            'user': a user identifier that is used to create a store file to hold
+                    the encrypted item and accompanying configuration. A user's
+                    store file can hold multiple encrypted items.
+        '''
         try:
-            with open(self.config_path) as config_file:
-                self.config = json.load(config_file)
-                if self.name not in self.config:
-                    self.__init_config()
+            self.name = str(data['name']).strip()
+            self.user_id = str(data['user']).strip()
+        except (KeyError, TypeError):
+            raise EncryptionError('You must supply name and user strings')
 
-        except IOError:
-            qpylib.log('encdec : __load_config : Encryption config file does not exist, creating')
-            self.__init_config()
+        if not self.name or not self.user_id:
+            raise EncryptionError('Supplied name and user cannot be empty')
 
-        except Exception as error:  # pylint: disable=W0703
-            qpylib.log('encdec : __load_config : Error reading Encryption config file : {0}'.format(str(error)))
-            self.__init_config()
+        self.app_uuid = os.environ.get('QRADAR_APP_UUID')
 
-    def __save_config(self):
-        """ Writes the config object to a file on disk """
-        try:
-            with open(self.config_path, 'w') as config_file:
-                config_file.write(json.dumps(self.config))
+        if not self.app_uuid:
+            raise EncryptionError('Environment variable QRADAR_APP_UUID is missing')
 
-        except Exception as error:  # pylint: disable=W0703
-            qpylib.log('encdec : __save_config : Error saving Encryption config file: {0}'.format(str(error)))
+        self.config_store_path = qpylib.get_store_path('{0}_e.db'.format(self.user_id))
 
-    def __generate_token(self):
-        """ Generates a UUID to be used as reference_data map name. """
-        token = str(uuid.uuid4())
-        if len(self.config) > 0:
-            for name in self.config:
-                if 'UUID' in self.config[name] and token == str(self.config[name]['UUID']):
-                    token = self.__generate_token()
-        return token
-
-    @staticmethod
-    def __generate_random():
-        """ Returns a string containing a random hash that uses letters, digits and special characters """
-        random_hash = ''.join(
-            (
-                random.choice(string.ascii_letters + string.digits + string.punctuation)
-            )
-            for _ in range(16)
-        )
-        return random_hash
-
-    def __derive_key(self):
-        """ Generates derived key using stored config """
-        return KDF.PBKDF2(self.app_uuid + self.config[self.name]['UUID'],
-                          self.config[self.name]['salt'].encode('utf-8'),
-                          dkLen=32, #32 bytes = 256 bits, max AES key length
-                          count=self.config[self.name]['iterations'])
-
-    def __encrypt_string(self, clear_text_string):
-        """ Returns a string containing an encrypted copy of clear_text_string """
-        aes = AES.new(
-            self.__derive_key(),
-            AES.MODE_CFB,
-            self.config[self.name]['ivz'].encode('utf-8'),
-            segment_size=128)
-        clear_text_padded_string = pad(clear_text_string.encode('utf-8'), AES.block_size)
-        encrypted_bytes = aes.encrypt(clear_text_padded_string)
-        encrypted_hex_bytes = b2a_hex(encrypted_bytes).rstrip()
-        return encrypted_hex_bytes.decode('utf-8')
-
-    def __decrypt_string(self, encrypted_string):
-        """ Returns a string containing a decrypted copy of encrypted_string.
-            encrypted_string must be the result of a previous call to encrypt(). """
-        aes = AES.new(
-            self.__derive_key(),
-            AES.MODE_CFB,
-            self.config[self.name]['ivz'].encode('utf-8'),
-            segment_size=128)
-        encrypted_hex_bytes = encrypted_string.encode('utf-8')
-        encrypted_bytes = a2b_hex(encrypted_hex_bytes)
-        decrypted_bytes = unpad(aes.decrypt(encrypted_bytes), AES.block_size)
-        return decrypted_bytes.decode('utf-8')
+        if os.path.isfile(self.config_store_path):
+            self.config = self._read_config()
+        else:
+            self.config = {}
 
     def encrypt(self, clear_text):
-        """ Encrypts a clear text secret """
-        try:
-            self.config[self.name]['version'] = Encryption.engine_version
-            self.config[self.name]['secret'] = self.__encrypt_string(clear_text)
-            self.__save_config()
-            return self.config[self.name]['secret']
+        ''' Encrypts clear_text using the latest engine version.
+            Stores the encrypted value using the data provided to the init function,
+            i.e. in a store file named 'user'_e.db under label 'name'.
+            Returns the encrypted value.
+        '''
+        self._reset_config_if_required()
 
-        except Exception as error:  # pylint: disable=W0703
-            qpylib.log('encdec : encrypt : Failed to encrypt secret: {0}'.format(error))
-            return str('')
+        try:
+            self.config[self.name]['secret'] = self._get_latest_engine().encrypt(clear_text)
+        except Exception as error:
+            raise EncryptionError('Failed to encrypt secret for name {0}: {1}'
+                                  .format(self.name, error))
+
+        self._save_config()
+        return self.config[self.name]['secret']
 
     def decrypt(self):
-        """ Decrypts and returns the previously-encrypted secret"""
+        ''' Decrypts the item with label 'name' from store file named 'user'_e.db
+            (see init function), using the appropriate engine version.
+            If the item was originally encrypted using an older engine version,
+            it is re-encrypted using the latest engine, and the store file content
+            for the item is replaced.
+            Returns the decrypted value.
+        '''
+        if self.name not in self.config:
+            raise EncryptionError('No config found for name {0}'.format(self.name))
+
         if 'secret' not in self.config[self.name]:
-            raise ValueError("Encryption : no secret to decrypt")
+            raise EncryptionError('No secret found for name {0}'.format(self.name))
 
-        if self.config[self.name].get('version') != Encryption.engine_version:
-            raise ValueError(("Encryption : secret engine mismatch. "
-                              "Secret was stored with version {}, attempted to decrypt with version {}.")
-                             .format(self.config[self.name].get('version'), Encryption.engine_version))
-
+        engine = self._choose_engine()
         try:
-            return self.__decrypt_string(self.config[self.name]['secret'])
+            secret = engine.decrypt()
+        except Exception as error:
+            raise EncryptionError('Failed to decrypt secret for name {0}: {1}'
+                                  .format(self.name, error))
 
-        except Exception as error:  # pylint: disable=W0703
-            qpylib.log('encdec : decrypt : Failed to decrypt secret : {0}'.format(error))
-            return str('')
+        if engine.version != Encryption.latest_engine_version:
+            self.encrypt(secret)
+
+        return secret
+
+    def _get_latest_engine(self):
+        return Enginev3(self.config[self.name], self.app_uuid)
+
+    def _choose_engine(self):
+        # If no version is present in the config we default to engine v2.
+        try:
+            engine_version = self.config[self.name]['version']
+        except KeyError:
+            engine_version = 2
+
+        if engine_version == 2:
+            return Enginev2(self.config[self.name], self.app_uuid)
+        if engine_version == 3:
+            return Enginev3(self.config[self.name], self.app_uuid)
+        raise EncryptionError('Config for name {0} contains invalid engine version {1}'
+                              .format(self.name, engine_version))
+
+    def _reset_config_if_required(self):
+        # Keep current config if it has an engine version that is the latest,
+        # otherwise reset to latest engine config.
+        reset_required = False
+        try:
+            if self.config[self.name]['version'] != Encryption.latest_engine_version:
+                reset_required = True
+        except KeyError:
+            reset_required = True
+        if reset_required:
+            self.config[self.name] = Enginev3.generate_config()
+
+    def _read_config(self):
+        try:
+            with open(self.config_store_path) as config_file:
+                return json.load(config_file)
+        except Exception as error:
+            raise EncryptionError('Unable to load config store {0}: {1}'
+                                  .format(self.config_store_path, error))
+
+    def _save_config(self):
+        try:
+            with open(self.config_store_path, 'w') as config_file:
+                config_file.write(json.dumps(self.config))
+        except Exception as error:
+            raise EncryptionError('Unable to save config to {0}: {1}'
+                                  .format(self.config_store_path, error))
