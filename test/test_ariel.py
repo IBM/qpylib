@@ -8,11 +8,10 @@ import responses
 from qpylib.ariel import ArielSearch, ArielError
 
 DUMMY_QUERY = 'select stuff from db'
-ARIEL_URL = 'https://myhost.ibm.com/api/ariel/searches'
-POST_SEARCH = ('{0}?query_expression=select+stuff+from+db'
-               '&fields=status%2Csearch_id').format(ARIEL_URL)
 SEARCH_ID = 'fa7a12c4-a3a7-425a-82b3-67d42c33860c'
-GET_SEARCH = '{0}/{1}?fields=status%2Crecord_count'.format(ARIEL_URL, SEARCH_ID)
+ARIEL_URL = 'https://myhost.ibm.com/api/ariel/searches'
+POST_SEARCH = '{0}?query_expression=select+stuff+from+db'.format(ARIEL_URL)
+GET_SEARCH = '{0}/{1}'.format(ARIEL_URL, SEARCH_ID)
 GET_RESULTS = '{0}/{1}/results'.format(ARIEL_URL, SEARCH_ID)
 
 @pytest.fixture(scope='module', autouse=True)

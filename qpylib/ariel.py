@@ -32,11 +32,9 @@ class ArielSearch():
             Returns a tuple containing search status and search ID.
             Raises ArielError if the search could not be created.
         '''
-        headers = self._build_headers(api_version)
-        params = {'query_expression': query,
-                  'fields': 'status,search_id'}
         response = qpylib.REST('POST', ArielSearch.SEARCHES_ENDPOINT,
-                               headers=headers, params=params)
+                               headers=self._build_headers(api_version),
+                               params={'query_expression': query})
         if response.status_code != 201:
             try:
                 message = response.json()['message']
@@ -81,10 +79,8 @@ class ArielSearch():
             Returns a tuple containing search status and record count.
             Raises ArielError if the status information could not be retrieved.
         '''
-        headers = self._build_headers(api_version)
-        params = {'fields': 'status,record_count'}
         response = qpylib.REST('GET', ArielSearch.SEARCH_ENDPOINT.format(search_id),
-                               headers=headers, params=params)
+                               headers=self._build_headers(api_version))
         if response.status_code != 200:
             raise ArielError('Ariel search {0} could not be retrieved: {1}'
                              .format(search_id, response.content))
