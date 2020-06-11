@@ -97,7 +97,7 @@ def get_console_fqdn():
 
 # pylint: disable=invalid-name, too-many-arguments
 def REST(rest_action, request_url, version=None, headers=None, data=None,
-         params=None, json_body=None, verify=None, timeout=60):
+         params=None, json_body=None, verify=None, timeout=60, **kwargs):
     ''' Invokes a rest_action request to request_url using the Python requests module.
         Returns a requests.Response object.
         Raises ValueError if rest_action is not one of GET, PUT, POST, DELETE.
@@ -107,7 +107,7 @@ def REST(rest_action, request_url, version=None, headers=None, data=None,
     else:
         rest_func = rest_qpylib.live_rest
     return rest_func(rest_action, request_url, version, headers, data,
-                     params, json_body, verify, timeout)
+                     params, json_body, verify, timeout, **kwargs)
 
 # ==== JSON ====
 

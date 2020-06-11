@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import os
-from socket import gethostbyname, gethostname
+from socket import gethostbyname
 from flask import request, has_request_context
 import requests
 from . import app_qpylib
@@ -15,28 +15,28 @@ SEC_HEADER = 'SEC'
 SEC_ADMIN_TOKEN = 'SEC_ADMIN_TOKEN'
 
 def live_rest(rest_action, request_url, version, headers, data,
-              params, json_body, verify, timeout):
+              params, json_body, verify, timeout, **kwargs):
     if not isinstance(verify, str):
         verify = _get_cert_filepath()
     return _rest(rest_action, request_url, version, headers, data,
-                 params, json_body, verify, timeout)
+                 params, json_body, verify, timeout, **kwargs)
 
 def sdk_rest(rest_action, request_url, version, headers, data,
-             params, json_body, verify, timeout):
+             params, json_body, verify, timeout, **kwargs):
     if not isinstance(verify, str):
         # To be completed. Default to no verification for now.
         verify = False
     return _rest(rest_action, request_url, version, headers, data,
-                 params, json_body, verify, timeout)
+                 params, json_body, verify, timeout, **kwargs)
 
 def _rest(rest_action, request_url, version, headers, data,
-          params, json_body, verify, timeout):
+          params, json_body, verify, timeout, **kwargs):
     rest_func = _choose_rest_function(rest_action)
     full_url = _generate_full_url(request_url)
     rest_headers = _add_headers(headers, version)
     proxies = _add_proxies()
     return rest_func(full_url, headers=rest_headers, data=data, params=params,
-                     json=json_body, verify=verify, timeout=timeout, proxies=proxies)
+                     json=json_body, verify=verify, timeout=timeout, proxies=proxies, **kwargs)
 
 def _get_cert_filepath():
     with open('/proc/mounts') as mounts:
@@ -52,7 +52,7 @@ def _add_headers(headers, version=None):
         headers['Version'] = version
 
     if headers.get('Host') is None:
-        headers['Host'] = gethostbyname(gethostname())
+        headers['Host'] = gethostbyname('localhost')
 
     if has_request_context():
         if QRADAR_CSRF in request.cookies.keys():
