@@ -12,7 +12,7 @@ def get_app_id():
     app_id = os.getenv('QRADAR_APP_ID')
     if app_id is None:
         app_id = 0
-    return str(app_id)
+    return int(app_id)
 
 def get_app_name():
     return get_manifest_field_value('name')
@@ -67,7 +67,7 @@ def get_app_base_url():
     then an empty string is returned.
     """
     app_id = get_app_id()
-    if app_id == '':
+    if app_id == 0:
         return ''
 
     host = _get_host()
