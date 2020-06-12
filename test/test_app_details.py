@@ -37,6 +37,12 @@ def env_qradar_app_id():
     yield
     del os.environ['QRADAR_APP_ID']
 
+@pytest.fixture(scope='function')
+def env_qradar_app_id_string():
+    os.environ['QRADAR_APP_ID'] = 'qradar_app_id'
+    yield
+    del os.environ['QRADAR_APP_ID']
+
 # ==== get_app_id ====
 
 def test_get_app_id_returns_value_from_env(env_qradar_app_id):
@@ -44,6 +50,10 @@ def test_get_app_id_returns_value_from_env(env_qradar_app_id):
 
 def test_get_app_id_returns_zero_when_field_missing_from_env():
     assert qpylib.get_app_id() == 0
+
+def test_get_app_id_raises_error_when_env_field_contains_string(env_qradar_app_id_string):
+    with pytest.raises(ValueError, match='Environment variable QRADAR_APP_ID has non-numeric value qradar_app_id'):
+        qpylib.get_app_id()
 
 # ==== get_app_name ====
 
