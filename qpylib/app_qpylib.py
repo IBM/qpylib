@@ -9,7 +9,11 @@ from flask import request, url_for
 Q_CACHED_MANIFEST = None
 
 def get_app_id():
-    return get_manifest_field_value('app_id', 0)
+    app_id = os.getenv('QRADAR_APP_ID', '0')
+    try:
+        return int(app_id)
+    except ValueError:
+        raise ValueError('Environment variable QRADAR_APP_ID has non-numeric value {0}'.format(app_id))
 
 def get_app_name():
     return get_manifest_field_value('name')
@@ -64,7 +68,7 @@ def get_app_base_url():
     then an empty string is returned.
     """
     app_id = get_app_id()
-    if app_id == '':
+    if app_id == 0:
         return ''
 
     host = _get_host()

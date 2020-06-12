@@ -31,15 +31,29 @@ def env_app_root():
     yield
     del os.environ['APP_ROOT']
 
+@pytest.fixture(scope='function')
+def env_qradar_app_id():
+    os.environ['QRADAR_APP_ID'] = '1005'
+    yield
+    del os.environ['QRADAR_APP_ID']
+
+@pytest.fixture(scope='function')
+def env_qradar_app_id_string():
+    os.environ['QRADAR_APP_ID'] = 'qradar_app_id'
+    yield
+    del os.environ['QRADAR_APP_ID']
+
 # ==== get_app_id ====
 
-@patch(GET_MANIFEST_JSON, return_value=manifest_path('installed.json'))
-def test_get_app_id_returns_value_from_manifest(mock_manifest):
+def test_get_app_id_returns_value_from_env(env_qradar_app_id):
     assert qpylib.get_app_id() == 1005
 
-@patch(GET_MANIFEST_JSON, return_value=manifest_path('pre_install.json'))
-def test_get_app_id_returns_zero_when_field_missing_from_manifest(mock_manifest):
+def test_get_app_id_returns_zero_when_field_missing_from_env():
     assert qpylib.get_app_id() == 0
+
+def test_get_app_id_raises_error_when_env_field_contains_string(env_qradar_app_id_string):
+    with pytest.raises(ValueError, match='Environment variable QRADAR_APP_ID has non-numeric value qradar_app_id'):
+        qpylib.get_app_id()
 
 # ==== get_app_name ====
 
@@ -61,7 +75,6 @@ def test_get_manifest_json_no_cache(mock_manifest):
     assert manifest_json['description'] == 'A sample live manifest'
     assert manifest_json['version'] == '1.0'
     assert manifest_json['uuid'] == 'aaff161f-871a-435c-866b-c65b4ceca959'
-    assert manifest_json['app_id'] == 1005
     assert manifest_json['console_ip'] == '9.123.234.101'
 
 # ==== get_root_path ====
@@ -86,30 +99,26 @@ def test_get_store_path_with_relative_path(env_app_root):
 
 # ==== get_app_base_url ====
 
-@patch(GET_MANIFEST_JSON, return_value=manifest_path('pre_install.json'))
-def test_get_app_base_url_returns_empty_string_when_app_id_missing_from_manifest(mock_manifest):
+def test_get_app_base_url_returns_empty_string_when_app_id_missing_from_env():
     assert qpylib.get_app_base_url() == ''
 
-@patch(GET_MANIFEST_JSON, return_value=manifest_path('installed_no_console_ip.json'))
-def test_get_app_base_url_returns_empty_string_when_host_cannot_be_determined(mock_manifest):
+def test_get_app_base_url_returns_empty_string_when_host_cannot_be_determined(env_qradar_app_id):
     assert qpylib.get_app_base_url() == ''
 
-@patch(GET_MANIFEST_JSON, return_value=manifest_path('installed_no_console_ip.json'))
-def test_get_app_base_url_uses_console_ip_when_x_console_host_header_missing(mock_manifest,
-                                                                             env_qradar_console_ip):
-    assert qpylib.get_app_base_url() == 'https://9.123.234.101/console/plugins/1007/app_proxy'
+def test_get_app_base_url_uses_console_ip_when_x_console_host_header_missing(env_qradar_console_ip,
+                                                                             env_qradar_app_id):
+    assert qpylib.get_app_base_url() == 'https://9.123.234.101/console/plugins/1005/app_proxy'
 
-@patch(GET_MANIFEST_JSON, return_value=manifest_path('installed_no_console_ip.json'))
 @patch('qpylib.app_qpylib._get_host_header', return_value='9.10.11.12')
-def test_get_app_base_url_uses_x_console_host_header_if_present(mock_get_host_header, mock_manifest,
-                                                                env_qradar_console_ip):
-    assert qpylib.get_app_base_url() == 'https://9.10.11.12/console/plugins/1007/app_proxy'
+def test_get_app_base_url_uses_x_console_host_header_if_present(mock_get_host_header,
+                                                                env_qradar_console_ip,
+                                                                env_qradar_app_id):
+    assert qpylib.get_app_base_url() == 'https://9.10.11.12/console/plugins/1005/app_proxy'
 
 # ==== q_url_for ====
 
-@patch(GET_MANIFEST_JSON, return_value=manifest_path('installed.json'))
 @patch('qpylib.app_qpylib.get_endpoint_url', return_value='/index')
-def test_q_url_for(mock_flask_url_for, mock_manifest, env_qradar_console_ip):
+def test_q_url_for(mock_flask_url_for, env_qradar_console_ip, env_qradar_app_id):
     assert qpylib.q_url_for('index') == 'https://9.123.234.101/console/plugins/1005/app_proxy/index'
 
 # ==== get_console_address ====
