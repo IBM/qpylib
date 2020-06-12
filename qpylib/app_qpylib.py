@@ -9,7 +9,7 @@ from flask import request, url_for
 Q_CACHED_MANIFEST = None
 
 def get_app_id():
-    app_id = os.getenv('QRADAR_APP_ID') or 0
+    app_id = os.getenv('QRADAR_APP_ID', '0')
     try:
         return int(app_id)
     except ValueError:
