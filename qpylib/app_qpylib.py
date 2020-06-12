@@ -9,10 +9,7 @@ from flask import request, url_for
 Q_CACHED_MANIFEST = None
 
 def get_app_id():
-    app_id = os.getenv('QRADAR_APP_ID')
-    if app_id is None:
-        app_id = 0
-    return int(app_id)
+    return int(os.getenv('QRADAR_APP_ID') or 0)
 
 def get_app_name():
     return get_manifest_field_value('name')

@@ -92,7 +92,7 @@ def test_get_store_path_with_relative_path(env_app_root):
 def test_get_app_base_url_returns_empty_string_when_app_id_missing_from_env():
     assert qpylib.get_app_base_url() == ''
 
-def test_get_app_base_url_returns_empty_string_when_host_cannot_be_determined():
+def test_get_app_base_url_returns_empty_string_when_host_cannot_be_determined(env_qradar_app_id):
     assert qpylib.get_app_base_url() == ''
 
 def test_get_app_base_url_uses_console_ip_when_x_console_host_header_missing(env_qradar_console_ip,
