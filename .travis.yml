@@ -13,10 +13,10 @@ addons:
 
 script: 
   - ./lint.sh && ./test.sh
-    # sonar only on non-PRs
-  - if [ "$TRAVIS_PULL_REQUEST" = "false" ] && [ -z "$TRAVIS_TAG" ] && [ "$TRAVIS_REPO_SLUG" == "IBM/qpylib" ]; then
-      sonar-scanner -X;
-    fi
+    # sonar scan skipped if build was triggered by create pull request or create tag or fork build.
+#  - if [ "$TRAVIS_PULL_REQUEST" = "false" ] && [ -z "$TRAVIS_TAG" ] && [ "$TRAVIS_REPO_SLUG" == "IBM/qpylib" ]; then
+#      sonar-scanner;
+#    fi
 
 after_success:
   - if [[ $TRAVIS_TAG ]]; then
