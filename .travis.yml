@@ -14,7 +14,7 @@ addons:
 script: 
   - ./lint.sh && ./test.sh
     # sonar only on non-PRs
-  - if [ "$TRAVIS_PULL_REQUEST" = "false" ] && [ -z "$TRAVIS_TAG" ] && [ "$TRAVIS_REPO_SLUG" == "ibm/qpylib"]; then
+  - if [ "$TRAVIS_PULL_REQUEST" = "false" ] && [ -z "$TRAVIS_TAG" ] && [ "$TRAVIS_REPO_SLUG" == "IBM/qpylib"]; then
       sonar-scanner;
     fi
 
