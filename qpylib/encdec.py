@@ -9,6 +9,7 @@ import os
 from qpylib import qpylib
 from qpylib.encryption.enginev2 import Enginev2
 from qpylib.encryption.enginev3 import Enginev3
+from qpylib.encryption.enginev4 import Enginev4
 
 class EncryptionError(Exception):
     ''' All errors encountered by Encryption are reported via this class '''
@@ -23,12 +24,14 @@ class Encryption():
         Developer information
         ---------------------
         If the encryption algorithm needs to be changed, follow these steps:
-          - Create a new engine version in qpylib.encryption.
-          - In the previous engine version, remove all encryption-related
+          - Create a new engine version class in qpylib.encryption.
+          - In the previous engine version class, remove all encryption-related
             functions, leaving only decryption-related code.
-          - Update any engine-related code in this module.
+          - Update the engines dictionary below.
     '''
-    latest_engine_version = 3
+    engines = {2: Enginev2, 3: Enginev3, 4: Enginev4}
+    latest_engine_version = max(engines)
+    latest_engine_class = engines[latest_engine_version]
 
     def __init__(self, data):
         ''' data is an object containing two non-empty strings:
@@ -65,15 +68,17 @@ class Encryption():
             Returns the encrypted value.
         '''
         self._reset_config_if_required()
+        engine = Encryption.latest_engine_class(self.config[self.name], self.app_uuid)
 
         try:
-            self.config[self.name]['secret'] = self._get_latest_engine().encrypt(clear_text)
+            encrypted_secret = engine.encrypt(clear_text)
         except Exception as error:
             raise EncryptionError('Failed to encrypt secret for name {0}: {1}'
                                   .format(self.name, error))
 
+        self.config[self.name]['secret'] = encrypted_secret
         self._save_config()
-        return self.config[self.name]['secret']
+        return encrypted_secret
 
     def decrypt(self):
         ''' Decrypts the item with label 'name' from store file named 'user'_e.db
@@ -101,9 +106,6 @@ class Encryption():
 
         return secret
 
-    def _get_latest_engine(self):
-        return Enginev3(self.config[self.name], self.app_uuid)
-
     def _choose_engine(self):
         # If no version is present in the config we default to engine v2.
         try:
@@ -111,12 +113,12 @@ class Encryption():
         except KeyError:
             engine_version = 2
 
-        if engine_version == 2:
-            return Enginev2(self.config[self.name], self.app_uuid)
-        if engine_version == 3:
-            return Enginev3(self.config[self.name], self.app_uuid)
-        raise EncryptionError('Config for name {0} contains invalid engine version {1}'
-                              .format(self.name, engine_version))
+        try:
+            engine = Encryption.engines[engine_version]
+        except KeyError:
+            raise EncryptionError('Config for name {0} contains invalid engine version {1}'
+                                  .format(self.name, engine_version))
+        return engine(self.config[self.name], self.app_uuid)
 
     def _reset_config_if_required(self):
         # Keep current config if it has an engine version that is the latest,
@@ -128,7 +130,7 @@ class Encryption():
         except KeyError:
             reset_required = True
         if reset_required:
-            self.config[self.name] = Enginev3.generate_config()
+            self.config[self.name] = Encryption.latest_engine_class.generate_config()
 
     def _read_config(self):
         try:

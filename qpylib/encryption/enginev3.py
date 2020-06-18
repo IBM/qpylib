@@ -2,46 +2,35 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-import base64
-import string
-import secrets
-from cryptography.fernet import Fernet
-from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+from binascii import a2b_hex
+from Crypto.Cipher import AES
+from Crypto.Protocol import KDF
+from Crypto.Util.Padding import unpad
 
 class Enginev3():
-    ''' Enginev3 is the first engine change for qpylib on Github.
-        See https://cryptography.io/en/latest/fernet.
+    ''' Enginev3 uses a modified version of Enginev2's AES/CFB encryption.
     '''
     def __init__(self, config, app_uuid):
+        ''' config should contain the following fields:
+            salt, UUID, ivz, iterations.
+        '''
         self.version = 3
         self.config = config
         self.app_uuid = app_uuid
 
-    def encrypt(self, clear_text_string):
-        fernet = Fernet(self._derive_key())
-        encrypted_bytes = fernet.encrypt(clear_text_string.encode('utf-8'))
-        return encrypted_bytes.decode('utf-8')
-
     def decrypt(self):
-        fernet = Fernet(self._derive_key())
-        decrypted_bytes = fernet.decrypt(self.config['secret'].encode('utf-8'))
+        aes = AES.new(
+            self._derive_key(),
+            AES.MODE_CFB,
+            self.config['ivz'].encode('utf-8'),
+            segment_size=128)
+        encrypted_hex_bytes = self.config['secret'].encode('utf-8')
+        encrypted_bytes = a2b_hex(encrypted_hex_bytes)
+        decrypted_bytes = unpad(aes.decrypt(encrypted_bytes), AES.block_size)
         return decrypted_bytes.decode('utf-8')
 
     def _derive_key(self):
-        kdf = PBKDF2HMAC(
-            algorithm=hashes.SHA256(),
-            length=32,
-            salt=self.config['salt'].encode('utf-8'),
-            iterations=self.config['iterations'],
-            backend=default_backend()
-        )
-        key = kdf.derive(self.app_uuid.encode('utf-8'))
-        return base64.urlsafe_b64encode(key)
-
-    @staticmethod
-    def generate_config():
-        characters = string.ascii_letters + string.digits + string.punctuation
-        salt = ''.join(secrets.choice(characters) for _ in range(16))
-        return {'version': 3, 'salt': salt, 'iterations': 100000}
+        return KDF.PBKDF2(self.app_uuid + self.config['UUID'],
+                          self.config['salt'].encode('utf-8'),
+                          dkLen=32,
+                          count=self.config['iterations'])
