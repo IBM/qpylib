@@ -31,7 +31,7 @@ def copy_dbstore(dbstore_file_name, target_dir):
 
 @pytest.fixture()
 def uuid_env_var():
-    os.environ['QRADAR_APP_UUID'] = 'a1b2c3d4-4896-11e8-842f-0ed5f89f718b'
+    os.environ['QRADAR_APP_UUID'] = '82c9bca4-7f1c-4a38-8011-d8e1742105b0'
     yield
     del os.environ['QRADAR_APP_UUID']
 
@@ -141,7 +141,13 @@ def test_init_strips_leading_and_trailing_whitespace(uuid_env_var, patch_get_sto
         store_json = json.load(db_file)
     assert store_json['secret_thing']['secret'] == enc_string
 
-def test_decrypt_handles_enginev2_secrets(uuid_env_var, tmpdir):
+@pytest.fixture()
+def v2_uuid_env_var():
+    os.environ['QRADAR_APP_UUID'] = 'a1b2c3d4-4896-11e8-842f-0ed5f89f718b'
+    yield
+    del os.environ['QRADAR_APP_UUID']
+
+def test_decrypt_handles_enginev2_secrets(v2_uuid_env_var, tmpdir):
     db_store = 'v2user_e.db'
     copy_dbstore(db_store, tmpdir.strpath)
     with patch('qpylib.qpylib.get_store_path') as mock_get_store_path:
@@ -151,11 +157,12 @@ def test_decrypt_handles_enginev2_secrets(uuid_env_var, tmpdir):
         mytoken = Encryption({'name': 'mytoken', 'user': 'v2user'})
         assert mytoken.decrypt() == 'abcdefghij'
 
-def test_decrypt_old_secret_reencrypts_with_latest_engine(uuid_env_var, tmpdir):
+def test_decrypt_v2_secret_reencrypts_with_latest_engine(v2_uuid_env_var, tmpdir):
     db_store = 'v2user_e.db'
     copy_dbstore(db_store, tmpdir.strpath)
     with patch('qpylib.qpylib.get_store_path') as mock_get_store_path:
-        mock_get_store_path.return_value = os.path.join(tmpdir.strpath, db_store)
+        db_store_path = os.path.join(tmpdir.strpath, db_store)
+        mock_get_store_path.return_value = db_store_path
         mytoken = Encryption({'name': 'mytoken', 'user': 'v2user'})
         assert 'version' not in mytoken.config['mytoken']
         assert mytoken.decrypt() == 'abcdefghij'
@@ -163,6 +170,42 @@ def test_decrypt_old_secret_reencrypts_with_latest_engine(uuid_env_var, tmpdir):
         mytoken2 = Encryption({'name': 'mytoken', 'user': 'v2user'})
         assert mytoken2.config['mytoken']['version'] == Encryption.latest_engine_version
         assert mytoken2.decrypt() == 'abcdefghij'
+        with open(db_store_path) as db_file:
+            store_json = json.load(db_file)
+        assert store_json['mytoken']['version'] == Encryption.latest_engine_version
+
+@pytest.fixture()
+def v3_uuid_env_var():
+    os.environ['QRADAR_APP_UUID'] = '5b7e8085-ca96-41e1-8e4b-2983f0d595b8'
+    yield
+    del os.environ['QRADAR_APP_UUID']
+
+def test_decrypt_handles_enginev3_secrets(v3_uuid_env_var, tmpdir):
+    db_store = 'v3user_e.db'
+    copy_dbstore(db_store, tmpdir.strpath)
+    with patch('qpylib.qpylib.get_store_path') as mock_get_store_path:
+        mock_get_store_path.return_value = os.path.join(tmpdir.strpath, db_store)
+        mykey = Encryption({'name': 'mykey', 'user': 'v3user'})
+        assert mykey.decrypt() == '12345678'
+        mytoken = Encryption({'name': 'mytoken', 'user': 'v3user'})
+        assert mytoken.decrypt() == 'abcdefghij'
+
+def test_decrypt_v3_secret_reencrypts_with_latest_engine(v3_uuid_env_var, tmpdir):
+    db_store = 'v3user_e.db'
+    copy_dbstore(db_store, tmpdir.strpath)
+    with patch('qpylib.qpylib.get_store_path') as mock_get_store_path:
+        db_store_path = os.path.join(tmpdir.strpath, db_store)
+        mock_get_store_path.return_value = db_store_path
+        mytoken = Encryption({'name': 'mytoken', 'user': 'v3user'})
+        assert mytoken.config['mytoken']['version'] == 3
+        assert mytoken.decrypt() == 'abcdefghij'
+        # DB config for 'mytoken' has now been updated with latest engine version details.
+        mytoken2 = Encryption({'name': 'mytoken', 'user': 'v3user'})
+        assert mytoken2.config['mytoken']['version'] == Encryption.latest_engine_version
+        assert mytoken2.decrypt() == 'abcdefghij'
+        with open(db_store_path) as db_file:
+            store_json = json.load(db_file)
+        assert store_json['mytoken']['version'] == Encryption.latest_engine_version
 
 def test_encrypt_raises_error_when_config_db_not_writable(uuid_env_var, tmpdir):
     db_store = QUSER_DB_STORE

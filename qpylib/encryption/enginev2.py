@@ -15,6 +15,7 @@ class Enginev2():
         The most significant changes in the Python 2 to 3 conversion were the
         addition of encode/decode calls to convert between string and bytes values.
         Also, Crypto packages now come from pycryptodome, not pycrypto.
+        Enginev2 uses AES/CFB encryption.
     '''
     def __init__(self, config, app_uuid):
         ''' config should contain the following fields:
@@ -30,8 +31,7 @@ class Enginev2():
             AES.MODE_CFB,
             self.config['ivz'].encode('utf-8'),
             segment_size=128)
-        encrypted_string = self.config['secret']
-        encrypted_hex_bytes = encrypted_string.encode('utf-8')
+        encrypted_hex_bytes = self.config['secret'].encode('utf-8')
         encrypted_bytes = a2b_hex(encrypted_hex_bytes)
         decrypted_bytes = aes.decrypt(encrypted_bytes)
         clear_text_padded_string = decrypted_bytes.decode('utf-8')
