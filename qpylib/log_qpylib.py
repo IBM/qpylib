@@ -53,7 +53,8 @@ def _choose_log_fn(level):
         'DEBUG': QLOGGER.debug,
         'WARNING': QLOGGER.warning,
         'ERROR': QLOGGER.error,
-        'CRITICAL': QLOGGER.critical
+        'CRITICAL': QLOGGER.critical,
+        'EXCEPTION': QLOGGER.exception
     }.get(level.upper(), QLOGGER.info)
 
 def _map_notification_code(level):
@@ -62,7 +63,8 @@ def _map_notification_code(level):
         'DEBUG': "0000006000",
         'WARNING': "0000004000",
         'ERROR': "0000003000",
-        'CRITICAL': "0000003000"
+        'CRITICAL': "0000003000",
+        'EXCEPTION': "0000003000",
     }.get(level.upper(), "0000006000")
 
 def _map_log_level(level):
