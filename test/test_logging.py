@@ -90,12 +90,14 @@ def test_all_log_levels_with_manifest_info_threshold(set_console_ip, info_thresh
         qpylib.log('hello warning', 'WARNING')
         qpylib.log('hello error', 'ERROR')
         qpylib.log('hello critical', 'CRITICAL')
+        qpylib.log('hello exception', 'EXCEPTION')
         verify_log_file_content(log_path, [
             {'level': 'INFO', 'text': 'hello default info'},
             {'level': 'INFO', 'text': 'hello info'},
             {'level': 'WARNING', 'text': 'hello warning'},
             {'level': 'ERROR', 'text': 'hello error'},
-            {'level': 'CRITICAL', 'text': 'hello critical'}],
+            {'level': 'CRITICAL', 'text': 'hello critical'},
+            {'level': 'ERROR', 'text': 'hello exception'}],
                                 not_expected_lines=[{'level': 'DEBUG', 'text': 'hello debug'}])
 
 def test_all_log_levels_with_manifest_debug_threshold(set_console_ip, debug_threshold, tmpdir):
@@ -109,13 +111,15 @@ def test_all_log_levels_with_manifest_debug_threshold(set_console_ip, debug_thre
         qpylib.log('hello warning', 'WARNING')
         qpylib.log('hello error', 'ERROR')
         qpylib.log('hello critical', 'CRITICAL')
+        qpylib.log('hello exception', 'EXCEPTION')
         verify_log_file_content(log_path, [
             {'level': 'DEBUG', 'text': 'hello debug'},
             {'level': 'INFO', 'text': 'hello default info'},
             {'level': 'INFO', 'text': 'hello info'},
             {'level': 'WARNING', 'text': 'hello warning'},
             {'level': 'ERROR', 'text': 'hello error'},
-            {'level': 'CRITICAL', 'text': 'hello critical'}])
+            {'level': 'CRITICAL', 'text': 'hello critical'},
+            {'level': 'ERROR', 'text': 'hello exception'}])
 
 def test_all_log_levels_with_set_debug_threshold(set_console_ip, info_threshold, tmpdir):
     log_path = os.path.join(tmpdir.strpath, 'app.log')
@@ -129,13 +133,15 @@ def test_all_log_levels_with_set_debug_threshold(set_console_ip, info_threshold,
         qpylib.log('hello warning', 'WARNING')
         qpylib.log('hello error', 'ERROR')
         qpylib.log('hello critical', 'CRITICAL')
+        qpylib.log('hello exception', 'EXCEPTION')
         verify_log_file_content(log_path, [
             {'level': 'DEBUG', 'text': 'hello debug'},
             {'level': 'INFO', 'text': 'hello default info'},
             {'level': 'INFO', 'text': 'hello info'},
             {'level': 'WARNING', 'text': 'hello warning'},
             {'level': 'ERROR', 'text': 'hello error'},
-            {'level': 'CRITICAL', 'text': 'hello critical'}])
+            {'level': 'CRITICAL', 'text': 'hello critical'},
+            {'level': 'ERROR', 'text': 'hello exception'}])
 
 def test_all_log_levels_with_set_warning_threshold(set_console_ip, info_threshold, tmpdir):
     log_path = os.path.join(tmpdir.strpath, 'app.log')
@@ -149,10 +155,12 @@ def test_all_log_levels_with_set_warning_threshold(set_console_ip, info_threshol
         qpylib.log('hello warning', 'WARNING')
         qpylib.log('hello error', 'ERROR')
         qpylib.log('hello critical', 'CRITICAL')
+        qpylib.log('hello exception', 'EXCEPTION')
         verify_log_file_content(log_path, [
             {'level': 'WARNING', 'text': 'hello warning'},
             {'level': 'ERROR', 'text': 'hello error'},
-            {'level': 'CRITICAL', 'text': 'hello critical'}],
+            {'level': 'CRITICAL', 'text': 'hello critical'},
+            {'level': 'ERROR', 'text': 'hello exception'}],
                                 not_expected_lines=[
                                     {'level': 'DEBUG', 'text': 'hello debug'},
                                     {'level': 'INFO', 'text': 'hello default info'},
@@ -178,10 +186,12 @@ def test_set_log_level_with_bad_level_uses_info(set_console_ip, debug_threshold,
         qpylib.log('hello warning', 'WARNING')
         qpylib.log('hello error', 'ERROR')
         qpylib.log('hello critical', 'CRITICAL')
+        qpylib.log('hello exception', 'EXCEPTION')
         verify_log_file_content(log_path, [
             {'level': 'INFO', 'text': 'hello default info'},
             {'level': 'INFO', 'text': 'hello info'},
             {'level': 'WARNING', 'text': 'hello warning'},
             {'level': 'ERROR', 'text': 'hello error'},
-            {'level': 'CRITICAL', 'text': 'hello critical'}],
+            {'level': 'CRITICAL', 'text': 'hello critical'},
+            {'level': 'ERROR', 'text': 'hello exception'}],
                                 not_expected_lines=[{'level': 'DEBUG', 'text': 'hello debug'}])
