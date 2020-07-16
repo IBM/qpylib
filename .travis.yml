@@ -8,15 +8,15 @@ python: 3.7.2
 
 addons:
   sonarcloud:
-    token:
-      secure: "${SONAR_CLOUD_TOKEN}"
+      organisation: "qradar-app-framework"
 
 script: 
   - ./lint.sh && ./test.sh
     # sonar scan skipped if build was triggered by create pull request or create tag or fork build.
-#  - if [ "$TRAVIS_PULL_REQUEST" = "false" ] && [ -z "$TRAVIS_TAG" ] && [ "$TRAVIS_REPO_SLUG" == "IBM/qpylib" ]; then
-#      sonar-scanner;
-#    fi
+    # this will only run once merged into the qpylib repository - not on forks/pull requests
+  - if [ "$TRAVIS_PULL_REQUEST" = "false" ] && [ -z "$TRAVIS_TAG" ] && [ "$TRAVIS_REPO_SLUG" == "IBM/qpylib" ]; then
+      sonar-scanner;
+    fi
 
 after_success:
   - if [[ $TRAVIS_TAG ]]; then
