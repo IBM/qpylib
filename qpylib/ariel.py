@@ -117,8 +117,8 @@ class ArielSearch():
         response = qpylib.REST('DELETE', ArielSearch.SEARCH_ENDPOINT.format(search_id),
                                headers=self._build_headers(api_version))
         if response.status_code != 200:
-                raise ArielError('Ariel search {0} could not be deleted: HTTP {1} was returned'
-                                .format(search_id, response.status_code))
+            raise ArielError('Ariel search {0} could not be deleted: HTTP {1} was returned'
+                             .format(search_id, response.status_code))
         response_json = response.json()
         return (response_json['status'], response_json['search_id'])
 
@@ -134,7 +134,7 @@ class ArielSearch():
                                params={'status': 'CANCELLED'})
         if response.status_code != 200:
             raise ArielError('Ariel search {0} could not be cancelled: HTTP {1} was returned'
-                            .format(search_id, response.status_code))
+                             .format(search_id, response.status_code))
         response_json = response.json()
         return (response_json['status'], response_json['search_id'])
 
