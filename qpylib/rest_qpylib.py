@@ -15,7 +15,7 @@ SEC_HEADER = 'SEC'
 SEC_ADMIN_TOKEN = 'SEC_ADMIN_TOKEN'
 
 def rest(rest_action, request_url, version, headers, data,
-          params, json_body, verify, timeout, **kwargs):
+         params, json_body, verify, timeout, **kwargs):
     rest_func = _choose_rest_function(rest_action)
     full_url = _generate_full_url(request_url)
     rest_headers = _add_headers(headers, version)

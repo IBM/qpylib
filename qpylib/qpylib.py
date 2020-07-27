@@ -8,7 +8,6 @@ from . import json_qpylib
 from . import log_qpylib
 from . import offense_qpylib
 from . import rest_qpylib
-from . import util_qpylib
 
 # ==== Logging ====
 
@@ -103,7 +102,7 @@ def REST(rest_action, request_url, version=None, headers=None, data=None,
         Raises ValueError if rest_action is not one of GET, PUT, POST, DELETE.
     '''
     return rest_qpylib.rest(rest_action, request_url, version, headers, data,
-                     params, json_body, verify, timeout, **kwargs)
+                            params, json_body, verify, timeout, **kwargs)
 
 # ==== JSON ====
 
