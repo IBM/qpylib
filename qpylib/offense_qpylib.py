@@ -8,10 +8,11 @@ from . import json_qpylib
 from . import qpylib
 
 # Context location yet to be finalised
-JSON_LD_CONTEXT = 'http://qradar/context/location'
+JSON_LD_CONTEXT = 'https://qradar/context/location'
 OFFENSE_HEADER_TEMPLATE = ('<div class="gridHeader" id="{0}gridheaderdiv" style="clear:both;">'
                            '<div class="heading" id="{0}headingdiv">{1}</div>'
                            '</div>')
+OFFENSE_ROW_TEMPLATE = '<tr><td>{0}</td><td>{1}</td></tr>'
 
 def get_offense_url(offense_id):
     return 'api/siem/offenses/{0}'.format(offense_id)
@@ -27,9 +28,9 @@ def get_offense_json(offense_id):
 
 def get_offense_html_example(offense_json):
     return ('<table><tbody>' +
-            '<tr><td>Offense ID</td><td>' + str(offense_json['id']) + '</td></tr>' +
-            '<tr><td>Source IP</td><td>' + offense_json['offense_source'] + '</td></tr>' +
-            '<tr><td>Severity</td><td>' + str(offense_json['severity']) + '</td></tr>' +
+            OFFENSE_ROW_TEMPLATE.format('Offense ID', str(offense_json['id'])) +
+            OFFENSE_ROW_TEMPLATE.format('Source IP', offense_json['offense_source']) +
+            OFFENSE_ROW_TEMPLATE.format('Severity', str(offense_json['severity'])) +
             '</tbody></table>')
 
 def get_offense_html_header(offense_id):
