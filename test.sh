@@ -3,4 +3,4 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-python -m pytest -v test
+python -m pytest -v --cov-report xml:coverage.xml --cov-report term --cov=qpylib test

@@ -8,3 +8,5 @@ rm -f qpylib/version.py
 rm -rf dist qpylib.egg-info
 rm -rf qpylib/__pycache__
 rm -rf test/__pycache__
+rm -f .coverage
+rm -f coverage.xml
