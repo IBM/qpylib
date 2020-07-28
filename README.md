@@ -1,5 +1,6 @@
 [![Build Status](https://travis-ci.com/IBM/qpylib.svg?branch=master)](https://travis-ci.com/IBM/qpylib)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=qpylib&metric=alert_status)](https://sonarcloud.io/dashboard?id=qpylib)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=qpylib&metric=coverage)](https://sonarcloud.io/component_measures?id=qpylib&metric=new_coverage&view=list)
 
 
 # QRadar App Python Library (qpylib)
@@ -22,4 +23,3 @@ any code contained herein is unsupported and subject to change.
 * [CONTRIBUTING](CONTRIBUTING.md)
 * [MAINTAINERS](MAINTAINERS.md)
 * [CHANGELOG](CHANGELOG.md)
-
