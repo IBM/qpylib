@@ -102,12 +102,10 @@ def REST(rest_action, request_url, version=None, headers=None, data=None,
         Returns a requests.Response object.
         Raises ValueError if rest_action is not one of GET, PUT, POST, DELETE.
     '''
-    if util_qpylib.is_sdk():
-        # To be completed. Default to no verification for now.
-        return rest_qpylib.rest(rest_action, request_url, version, headers, data,
-                                params, json_body, False, timeout, **kwargs)
+    # Default for the sdk is no verification for now
+    rest_verify = False if util_qpylib.is_sdk() else verify
     return rest_qpylib.rest(rest_action, request_url, version, headers, data,
-                            params, json_body, verify, timeout, **kwargs)
+                            params, json_body, rest_verify, timeout, **kwargs)
 
 # ==== JSON ====
 
