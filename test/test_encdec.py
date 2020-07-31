@@ -13,6 +13,15 @@ from qpylib.encdec import Encryption, EncryptionError
 
 QUSER_DB_STORE = 'quser_e.db'
 
+class DummyEngine():
+    def __init__(self, config, app_uuid):
+        self.config = config
+        self.app_uuid = app_uuid
+
+    @staticmethod
+    def encrypt(clear_text_string):
+        raise ValueError('Encryption failed')
+
 # Use this fixture for tests that don't depend on reading an existing
 # config file from disk. Avoids having to use tmpdir.
 @pytest.fixture()
@@ -36,44 +45,36 @@ def uuid_env_var():
     del os.environ['QRADAR_APP_UUID']
 
 def test_init_raises_error_on_missing_data_fields():
-    with pytest.raises(EncryptionError) as ex:
+    with pytest.raises(EncryptionError, match='You must supply name and user strings'):
         Encryption({})
-    assert str(ex.value) == 'You must supply name and user strings'
 
 def test_init_raises_error_on_missing_name_field():
-    with pytest.raises(EncryptionError) as ex:
+    with pytest.raises(EncryptionError, match='You must supply name and user strings'):
         Encryption({'user': 'quser'})
-    assert str(ex.value) == 'You must supply name and user strings'
 
 def test_init_raises_error_on_missing_user_field():
-    with pytest.raises(EncryptionError) as ex:
+    with pytest.raises(EncryptionError, match='You must supply name and user strings'):
         Encryption({'name': 'secret_thing'})
-    assert str(ex.value) == 'You must supply name and user strings'
 
 def test_init_raises_error_on_empty_name_field():
-    with pytest.raises(EncryptionError) as ex:
+    with pytest.raises(EncryptionError, match='Supplied name and user cannot be empty'):
         Encryption({'name': '', 'user': 'quser'})
-    assert str(ex.value) == 'Supplied name and user cannot be empty'
 
 def test_init_raises_error_on_empty_user_field():
-    with pytest.raises(EncryptionError) as ex:
+    with pytest.raises(EncryptionError, match='Supplied name and user cannot be empty'):
         Encryption({'name': 'secret_thing', 'user': ''})
-    assert str(ex.value) == 'Supplied name and user cannot be empty'
 
 def test_init_raises_error_on_whitespace_name_field():
-    with pytest.raises(EncryptionError) as ex:
+    with pytest.raises(EncryptionError, match='Supplied name and user cannot be empty'):
         Encryption({'name': '   ', 'user': 'quser'})
-    assert str(ex.value) == 'Supplied name and user cannot be empty'
 
 def test_init_raises_error_on_whitespace_user_field():
-    with pytest.raises(EncryptionError) as ex:
+    with pytest.raises(EncryptionError, match='Supplied name and user cannot be empty'):
         Encryption({'name': 'secret_thing', 'user': '     '})
-    assert str(ex.value) == 'Supplied name and user cannot be empty'
 
 def test_init_raises_error_on_missing_uuid_env_var():
-    with pytest.raises(EncryptionError) as ex:
+    with pytest.raises(EncryptionError, match='Environment variable QRADAR_APP_UUID is missing'):
         Encryption({'name': 'secret_thing', 'user': 'quser'})
-    assert str(ex.value) == 'Environment variable QRADAR_APP_UUID is missing'
 
 def test_init_raises_error_on_invalid_config_file_json(uuid_env_var, tmpdir):
     db_store = 'bad_content_e.db'
@@ -82,9 +83,8 @@ def test_init_raises_error_on_invalid_config_file_json(uuid_env_var, tmpdir):
         db_file.write('{invalid json}')
     with patch('qpylib.qpylib.get_store_path') as mock_get_store_path:
         mock_get_store_path.return_value = db_store_path
-        with pytest.raises(EncryptionError) as ex:
+        with pytest.raises(EncryptionError, match='Unable to load config store'):
             Encryption({'name': 'secret_thing', 'user': 'bad_content'})
-        assert str(ex.value).startswith('Unable to load config store')
 
 def test_init_creates_empty_config_when_config_db_missing(uuid_env_var, patch_get_store_path):
     enc = Encryption({'name': 'secret_thing', 'user': 'mystery_user'})
@@ -92,9 +92,8 @@ def test_init_creates_empty_config_when_config_db_missing(uuid_env_var, patch_ge
 
 def test_decrypt_raises_error_when_config_empty(uuid_env_var, patch_get_store_path):
     enc = Encryption({'name': 'secret_thing', 'user': 'mystery_user'})
-    with pytest.raises(EncryptionError) as ex:
+    with pytest.raises(EncryptionError, match='No config found for name secret_thing'):
         enc.decrypt()
-    assert str(ex.value) == 'No config found for name secret_thing'
 
 def test_decrypt_raises_error_when_secret_not_in_config_db(uuid_env_var, tmpdir):
     db_store = 'missing_secret_e.db'
@@ -104,9 +103,8 @@ def test_decrypt_raises_error_when_secret_not_in_config_db(uuid_env_var, tmpdir)
     with patch('qpylib.qpylib.get_store_path') as mock_get_store_path:
         mock_get_store_path.return_value = db_store_path
         enc = Encryption({'name': 'secret_thing', 'user': 'missing_secret'})
-        with pytest.raises(EncryptionError) as ex:
+        with pytest.raises(EncryptionError, match='No secret found for name secret_thing'):
             enc.decrypt()
-        assert str(ex.value) == 'No secret found for name secret_thing'
 
 def test_decrypt_raises_error_on_invalid_config_engine_version(uuid_env_var, tmpdir):
     db_store = 'bad_engine_version_e.db'
@@ -116,9 +114,28 @@ def test_decrypt_raises_error_on_invalid_config_engine_version(uuid_env_var, tmp
     with patch('qpylib.qpylib.get_store_path') as mock_get_store_path:
         mock_get_store_path.return_value = db_store_path
         enc = Encryption({'name': 'secret_thing', 'user': 'bad_engine_version'})
-        with pytest.raises(EncryptionError) as ex:
+        with pytest.raises(EncryptionError,
+                           match='Config for name secret_thing contains invalid engine version 1'):
             enc.decrypt()
-        assert str(ex.value) == 'Config for name secret_thing contains invalid engine version 1'
+
+def test_decrypt_raises_error_on_decryption_failure(uuid_env_var, tmpdir):
+    db_store = 'badsecret_e.db'
+    copy_dbstore(db_store, tmpdir.strpath)
+    with patch('qpylib.qpylib.get_store_path') as mock_get_store_path:
+        mock_get_store_path.return_value = os.path.join(tmpdir.strpath, db_store)
+        enc = Encryption({'name': 'secret_thing', 'user': 'badsecret'})
+        with pytest.raises(EncryptionError,
+                           match='Failed to decrypt secret for name secret_thing: InvalidToken'):
+            enc.decrypt()
+
+def test_encrypt_raises_error_on_encryption_failure(uuid_env_var, patch_get_store_path):
+    enc = Encryption({'name': 'secret_thing', 'user': 'quser'})
+    enc.encrypt('mypassword')
+    with patch('qpylib.encdec.Encryption.latest_engine_class') as mock_latest_engine:
+        mock_latest_engine.return_value = DummyEngine
+        with pytest.raises(EncryptionError,
+                           match='Failed to encrypt secret for name secret_thing: ValueError'):
+            enc.encrypt('mypassword')
 
 def test_encrypt_stores_encrypted_secret(uuid_env_var, patch_get_store_path):
     enc = Encryption({'name': 'secret_thing', 'user': 'quser'})
@@ -215,9 +232,8 @@ def test_encrypt_raises_error_when_config_db_not_writable(uuid_env_var, tmpdir):
         enc = Encryption({'name': 'secret_thing', 'user': 'quser'})
         enc.encrypt('xyz')
         os.chmod(db_store_path, 0o400)
-        with pytest.raises(EncryptionError) as ex:
+        with pytest.raises(EncryptionError, match='Unable to save config'):
             enc.encrypt('xyz')
-        assert str(ex.value).startswith('Unable to save config')
 
 def test_encrypt_decrypt_null_char(uuid_env_var, patch_get_store_path):
     enc = Encryption({'name': 'secret_thing', 'user': 'quser'})

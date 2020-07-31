@@ -26,16 +26,6 @@ def get_offense_json(offense_id):
         raise ValueError('Could not retrieve offense with id {0}'.format(offense_id))
     return response.json()
 
-def get_offense_html_example(offense_json):
-    return ('<table><tbody>' +
-            OFFENSE_ROW_TEMPLATE.format('Offense ID', str(offense_json['id'])) +
-            OFFENSE_ROW_TEMPLATE.format('Source IP', offense_json['offense_source']) +
-            OFFENSE_ROW_TEMPLATE.format('Severity', str(offense_json['severity'])) +
-            '</tbody></table>')
-
-def get_offense_html_header(offense_id):
-    return OFFENSE_HEADER_TEMPLATE.format(offense_id, app_qpylib.get_app_name())
-
 def get_offense_rendering(offense_id, render_type):
     rendering_fn = _choose_offense_rendering(render_type)
     return rendering_fn(offense_id)
@@ -66,3 +56,13 @@ def get_offense_json_html(offense_id, generate_html=None, generate_heading=True)
         offense_html += generate_html(offense_json)
     offense_html += '<br/>'
     return json_qpylib.json_html(offense_html)
+
+def get_offense_html_example(offense_json):
+    return ('<table><tbody>' +
+            OFFENSE_ROW_TEMPLATE.format('Offense ID', str(offense_json['id'])) +
+            OFFENSE_ROW_TEMPLATE.format('Source IP', offense_json['offense_source']) +
+            OFFENSE_ROW_TEMPLATE.format('Severity', str(offense_json['severity'])) +
+            '</tbody></table>')
+
+def get_offense_html_header(offense_id):
+    return OFFENSE_HEADER_TEMPLATE.format(offense_id, app_qpylib.get_app_name())

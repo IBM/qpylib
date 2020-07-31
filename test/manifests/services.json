@@ -1,0 +1,54 @@
+{
+  "name": "ServiceJSONLD",
+  "description": "App with multiple services that use JSON-LD",
+  "uuid": "e4081cd1-c3c8-4089-afc7-c32039bd796c",
+  "version": "1.0",
+  "load_flask": "false",
+  "services": [
+    {
+      "name": "service1",
+      "version": "1.0",
+      "endpoints": [
+        {
+          "name": "endpoint1",
+          "path": "/endpoint1",
+          "http_method": "POST",
+          "request_mime_type": "application/json+ld",
+          "request_body_type": {
+            "@context": {"@id": "id1", "@type": "type1"}
+          },
+          "response": {
+            "mime_type": "application/json+ld",
+            "body_type": {
+              "@context": {"@id": "id2", "@type": "@id"}
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "service-no-endpoints",
+      "version": "1.0"
+    },
+    {
+      "name": "service-missing-keys",
+      "version": "1.0",
+      "endpoints": [
+        {
+          "name": "ep1",
+          "path": "/ep1",
+          "http_method": "POST",
+          "request_mime_type": "application/json+ld",
+          "request_body_type": {
+            "field1": "sometype"
+          }
+        },
+        {
+          "name": "ep2",
+          "path": "/ep2",
+          "http_method": "GET"
+        }
+      ]
+    }
+  ]
+}

@@ -31,7 +31,6 @@ class Encryption():
     '''
     engines = {2: Enginev2, 3: Enginev3, 4: Enginev4}
     latest_engine_version = max(engines)
-    latest_engine_class = engines[latest_engine_version]
 
     def __init__(self, data):
         ''' data is an object containing two non-empty strings:
@@ -68,13 +67,13 @@ class Encryption():
             Returns the encrypted value.
         '''
         self._reset_config_if_required()
-        engine = Encryption.latest_engine_class(self.config[self.name], self.app_uuid)
+        engine = self.latest_engine_class()(self.config[self.name], self.app_uuid)
 
         try:
             encrypted_secret = engine.encrypt(clear_text)
         except Exception as error:
             raise EncryptionError('Failed to encrypt secret for name {0}: {1}'
-                                  .format(self.name, error))
+                                  .format(self.name, type(error).__name__))
 
         self.config[self.name]['secret'] = encrypted_secret
         self._save_config()
@@ -99,12 +98,16 @@ class Encryption():
             secret = engine.decrypt()
         except Exception as error:
             raise EncryptionError('Failed to decrypt secret for name {0}: {1}'
-                                  .format(self.name, error))
+                                  .format(self.name, type(error).__name__))
 
         if engine.version != Encryption.latest_engine_version:
             self.encrypt(secret)
 
         return secret
+
+    @staticmethod
+    def latest_engine_class():
+        return Encryption.engines[Encryption.latest_engine_version]
 
     def _choose_engine(self):
         # If no version is present in the config we default to engine v2.
@@ -130,7 +133,7 @@ class Encryption():
         except KeyError:
             reset_required = True
         if reset_required:
-            self.config[self.name] = Encryption.latest_engine_class.generate_config()
+            self.config[self.name] = self.latest_engine_class().generate_config()
 
     def _read_config(self):
         try:
