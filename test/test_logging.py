@@ -14,6 +14,7 @@ from qpylib import qpylib, log_qpylib
 APP_FILE_LOG_FORMAT = '[{0}] - [APP_ID/1001][NOT:{1}] {2}'
 
 MANIFEST_JSON_ROOT_PATH = 'qpylib.app_qpylib.get_root_path'
+SYSLOGHANDLER = 'logging.handlers.SysLogHandler'
 
 def manifest_path(manifest_file):
     return os.path.join(os.path.dirname(__file__), 'manifests', manifest_file)
@@ -91,7 +92,8 @@ def check_rotating_file_handler_attrs(handler):
     assert handler.maxBytes == 2097152
     assert handler.backupCount == 5
 
-def test_create_log_with_ipv4(set_console_ip, info_threshold, tmpdir):
+@patch(SYSLOGHANDLER)
+def test_create_log_with_ipv4(mock_sysloghandler, set_console_ip, info_threshold, tmpdir):
     with patch('qpylib.log_qpylib._log_file_location') as mock_log_location:
         mock_log_location.return_value = os.path.join(tmpdir.strpath, 'app.log')
         qpylib.create_log()
@@ -102,7 +104,8 @@ def test_create_log_with_ipv4(set_console_ip, info_threshold, tmpdir):
         if isinstance(handler, RotatingFileHandler):
             check_rotating_file_handler_attrs(handler)
 
-def test_create_log_with_ipv6(set_console_ipv6, info_threshold, tmpdir):
+@patch(SYSLOGHANDLER)
+def test_create_log_with_ipv6(mock_sysloghandler, set_console_ipv6, info_threshold, tmpdir):
     with patch('qpylib.log_qpylib._log_file_location') as mock_log_location:
         mock_log_location.return_value = os.path.join(tmpdir.strpath, 'app.log')
         qpylib.create_log()
@@ -121,7 +124,9 @@ def test_default_log_level_no_level_in_manifest(mock_manifest, set_console_ip):
 def test_default_log_level_read_from_manifest(mock_manifest, set_console_ip):
     assert log_qpylib.default_log_level() == logging.DEBUG
 
-def test_all_log_levels_with_manifest_info_threshold(set_console_ip, info_threshold, tmpdir):
+@patch(SYSLOGHANDLER)
+def test_all_log_levels_with_manifest_info_threshold(mock_sysloghandler, set_console_ip,
+                                                     info_threshold, tmpdir):
     log_path = os.path.join(tmpdir.strpath, 'app.log')
     with patch('qpylib.log_qpylib._log_file_location') as mock_log_location:
         mock_log_location.return_value = log_path
@@ -142,7 +147,9 @@ def test_all_log_levels_with_manifest_info_threshold(set_console_ip, info_thresh
             {'level': 'ERROR', 'text': 'hello exception'}],
                                 not_expected_lines=[{'level': 'DEBUG', 'text': 'hello debug'}])
 
-def test_all_log_levels_with_manifest_debug_threshold(set_console_ip, debug_threshold, tmpdir):
+@patch(SYSLOGHANDLER)
+def test_all_log_levels_with_manifest_debug_threshold(mock_sysloghandler, set_console_ip,
+                                                      debug_threshold, tmpdir):
     log_path = os.path.join(tmpdir.strpath, 'app.log')
     with patch('qpylib.log_qpylib._log_file_location') as mock_log_location:
         mock_log_location.return_value = log_path
@@ -163,7 +170,9 @@ def test_all_log_levels_with_manifest_debug_threshold(set_console_ip, debug_thre
             {'level': 'CRITICAL', 'text': 'hello critical'},
             {'level': 'ERROR', 'text': 'hello exception'}])
 
-def test_all_log_levels_with_set_debug_threshold(set_console_ip, info_threshold, tmpdir):
+@patch(SYSLOGHANDLER)
+def test_all_log_levels_with_set_debug_threshold(mock_sysloghandler, set_console_ip,
+                                                 info_threshold, tmpdir):
     log_path = os.path.join(tmpdir.strpath, 'app.log')
     with patch('qpylib.log_qpylib._log_file_location') as mock_log_location:
         mock_log_location.return_value = log_path
@@ -185,7 +194,9 @@ def test_all_log_levels_with_set_debug_threshold(set_console_ip, info_threshold,
             {'level': 'CRITICAL', 'text': 'hello critical'},
             {'level': 'ERROR', 'text': 'hello exception'}])
 
-def test_all_log_levels_with_set_warning_threshold(set_console_ip, info_threshold, tmpdir):
+@patch(SYSLOGHANDLER)
+def test_all_log_levels_with_set_warning_threshold(mock_sysloghandler, set_console_ip,
+                                                   info_threshold, tmpdir):
     log_path = os.path.join(tmpdir.strpath, 'app.log')
     with patch('qpylib.log_qpylib._log_file_location') as mock_log_location:
         mock_log_location.return_value = log_path
@@ -208,7 +219,8 @@ def test_all_log_levels_with_set_warning_threshold(set_console_ip, info_threshol
                                     {'level': 'INFO', 'text': 'hello default info'},
                                     {'level': 'INFO', 'text': 'hello info'}])
 
-def test_log_with_bad_level_uses_info(set_console_ip, info_threshold, tmpdir):
+@patch(SYSLOGHANDLER)
+def test_log_with_bad_level_uses_info(mock_sysloghandler, set_console_ip, info_threshold, tmpdir):
     log_path = os.path.join(tmpdir.strpath, 'app.log')
     with patch('qpylib.log_qpylib._log_file_location') as mock_log_location:
         mock_log_location.return_value = log_path
@@ -216,7 +228,9 @@ def test_log_with_bad_level_uses_info(set_console_ip, info_threshold, tmpdir):
         qpylib.log('hello', 'BAD')
         verify_log_file_content(log_path, [{'level': 'INFO', 'text': 'hello'}])
 
-def test_set_log_level_with_bad_level_uses_info(set_console_ip, debug_threshold, tmpdir):
+@patch(SYSLOGHANDLER)
+def test_set_log_level_with_bad_level_uses_info(mock_sysloghandler, set_console_ip,
+                                                debug_threshold, tmpdir):
     log_path = os.path.join(tmpdir.strpath, 'app.log')
     with patch('qpylib.log_qpylib._log_file_location') as mock_log_location:
         mock_log_location.return_value = log_path
