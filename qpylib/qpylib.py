@@ -135,6 +135,6 @@ def get_asset_rendering(asset_id, render_type):
     '''
     return asset_qpylib.get_asset_rendering(asset_id, render_type)
 
-def render_json_ld_type(jld_type, data, jld_id=None):
+def render_jsonld_type(jld_type, data, jld_id=None):
     ''' Returns a JSON-LD type value rendered as a JSON-formatted string. '''
-    return json_qpylib.render_json_ld_type(jld_type, data, jld_id)
+    return json_qpylib.render_jsonld_type(jld_type, data, jld_id)

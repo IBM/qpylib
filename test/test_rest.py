@@ -30,8 +30,14 @@ def env_qradar_console_fqdn():
     yield
     del os.environ['QRADAR_CONSOLE_FQDN']
 
+@pytest.fixture()
+def env_qradar_rest_proxy():
+    os.environ['QRADAR_REST_PROXY'] = 'socks5h://localhost:1080'
+    yield
+    del os.environ['QRADAR_REST_PROXY']
+
 @responses.activate
-def test_rest_uses_env_vars_when_set(env_sec_admin_token, env_qradar_console_fqdn):
+def test_rest_uses_env_vars_when_set(env_sec_admin_token, env_qradar_console_fqdn, env_qradar_rest_proxy):
     responses.add('GET', 'https://myhost.ibm.com/testing_endpoint', status=200)
     response = qpylib.REST('GET', 'testing_endpoint', verify='dummycert', headers={'Host': '127.0.0.1'})
     assert response.status_code == 200
@@ -51,6 +57,19 @@ def test_rest_uses_sec_cookie_when_env_var_not_set(env_qradar_console_fqdn):
         assert responses.calls[0].request.method == 'GET'
         assert responses.calls[0].request.url == 'https://myhost.ibm.com/testing_endpoint'
         assert responses.calls[0].request.headers['SEC'] == test_sec_cookie_value
+
+@responses.activate
+def test_rest_uses_csrf_cookie_when_set(env_qradar_console_fqdn):
+    test_csrf_cookie_value = '1234567890abcdef'
+    cookie = http.dump_cookie("QRadarCSRF", test_csrf_cookie_value)
+    app = Flask(__name__)
+    with app.test_request_context(headers={"COOKIE": cookie}):
+        responses.add('GET', 'https://myhost.ibm.com/testing_endpoint', status=200)
+        response = qpylib.REST('GET', 'testing_endpoint', verify='dummycert', headers={'Host': '127.0.0.1'})
+        assert response.status_code == 200
+        assert responses.calls[0].request.method == 'GET'
+        assert responses.calls[0].request.url == 'https://myhost.ibm.com/testing_endpoint'
+        assert responses.calls[0].request.headers['QRadarCSRF'] == test_csrf_cookie_value
 
 @responses.activate
 def test_rest_fails_when_fqdn_env_var_not_set():

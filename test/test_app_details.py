@@ -7,9 +7,9 @@
 from unittest.mock import patch
 import os
 import pytest
-from qpylib import qpylib
+from qpylib import qpylib, app_qpylib
 
-GET_MANIFEST_JSON = 'qpylib.app_qpylib.get_root_path'
+MANIFEST_JSON_ROOT_PATH = 'qpylib.app_qpylib.get_root_path'
 
 def manifest_path(manifest_file):
     return os.path.join(os.path.dirname(__file__), 'manifests', manifest_file)
@@ -57,18 +57,18 @@ def test_get_app_id_raises_error_when_env_field_contains_string(env_qradar_app_i
 
 # ==== get_app_name ====
 
-@patch(GET_MANIFEST_JSON, return_value=manifest_path('installed.json'))
+@patch(MANIFEST_JSON_ROOT_PATH, return_value=manifest_path('installed.json'))
 def test_get_app_name_returns_value_from_manifest(mock_manifest):
     assert qpylib.get_app_name() == 'Live Manifest'
 
-@patch(GET_MANIFEST_JSON, return_value=manifest_path('missing_name.json'))
+@patch(MANIFEST_JSON_ROOT_PATH, return_value=manifest_path('missing_name.json'))
 def test_get_app_name_raises_error_when_field_missing_from_manifest(mock_manifest):
     with pytest.raises(KeyError, match='name is a required manifest field'):
         qpylib.get_app_name()
 
 # ==== get_manifest_json ====
 
-@patch(GET_MANIFEST_JSON, return_value=manifest_path('installed.json'))
+@patch(MANIFEST_JSON_ROOT_PATH, return_value=manifest_path('installed.json'))
 def test_get_manifest_json_no_cache(mock_manifest):
     manifest_json = qpylib.get_manifest_json()
     assert manifest_json['name'] == 'Live Manifest'
@@ -76,6 +76,16 @@ def test_get_manifest_json_no_cache(mock_manifest):
     assert manifest_json['version'] == '1.0'
     assert manifest_json['uuid'] == 'aaff161f-871a-435c-866b-c65b4ceca959'
     assert manifest_json['console_ip'] == '9.123.234.101'
+
+# ==== get_manifest_field_value ====
+
+@patch(MANIFEST_JSON_ROOT_PATH, return_value=manifest_path('installed.json'))
+def test_get_manifest_field_value_returns_value_from_manifest(mock_manifest):
+    assert qpylib.get_manifest_field_value('version') == '1.0'
+
+@patch(MANIFEST_JSON_ROOT_PATH, return_value=manifest_path('installed.json'))
+def test_get_manifest_field_value_returns_default_when_field_missing_from_manifest(mock_manifest):
+    assert qpylib.get_manifest_field_value('banana', 'abcd') == 'abcd'
 
 # ==== get_root_path ====
 
@@ -97,6 +107,14 @@ def test_get_store_path_with_no_relative_path(env_app_root):
 def test_get_store_path_with_relative_path(env_app_root):
     assert qpylib.get_store_path('my', 'other', 'directory') == '/opt/app-root/store/my/other/directory'
 
+# ==== get_log_path ====
+
+def test_get_log_path_with_no_relative_path(env_app_root):
+    assert app_qpylib.get_log_path() == '/opt/app-root/store/log'
+
+def test_get_log_path_with_relative_path(env_app_root):
+    assert app_qpylib.get_log_path('my', 'logfile') == '/opt/app-root/store/log/my/logfile'
+
 # ==== get_app_base_url ====
 
 def test_get_app_base_url_returns_empty_string_when_app_id_missing_from_env():
@@ -115,11 +133,15 @@ def test_get_app_base_url_uses_x_console_host_header_if_present(mock_get_host_he
                                                                 env_qradar_app_id):
     assert qpylib.get_app_base_url() == 'https://9.10.11.12/console/plugins/1005/app_proxy'
 
-# ==== q_url_for ====
+# ==== q_url_for, get_endpoint_url ====
 
 @patch('qpylib.app_qpylib.get_endpoint_url', return_value='/index')
 def test_q_url_for(mock_flask_url_for, env_qradar_console_ip, env_qradar_app_id):
     assert qpylib.q_url_for('index') == 'https://9.123.234.101/console/plugins/1005/app_proxy/index'
+
+def test_get_endpoint_url():
+    with pytest.raises(RuntimeError, match='Attempted to generate a URL without the application context'):
+        app_qpylib.get_endpoint_url('dummyurl')
 
 # ==== get_console_address ====
 
