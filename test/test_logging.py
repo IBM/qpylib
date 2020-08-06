@@ -10,6 +10,7 @@ from logging.handlers import RotatingFileHandler, SysLogHandler
 import os
 import pytest
 from qpylib import qpylib, log_qpylib
+import datetime
 
 APP_FILE_LOG_FORMAT = '[{0}] - [APP_ID/1001][NOT:{1}] {2}'
 
@@ -17,6 +18,13 @@ MANIFEST_JSON_ROOT_PATH = 'qpylib.app_qpylib.get_root_path'
 
 def manifest_path(manifest_file):
     return os.path.join(os.path.dirname(__file__), 'manifests', manifest_file)
+
+def validate_date(text, format):
+    try:
+        datetime.datetime.strptime(text, format)
+        return True
+    except ValueError:
+        return False
 
 # This fixture avoids reading app id from the manifest.
 # Setting default log level threshold is handled by separate fixtures.
@@ -237,3 +245,29 @@ def test_set_log_level_with_bad_level_uses_info(set_console_ip, debug_threshold,
             {'level': 'CRITICAL', 'text': 'hello critical'},
             {'level': 'ERROR', 'text': 'hello exception'}],
                                 not_expected_lines=[{'level': 'DEBUG', 'text': 'hello debug'}])
+
+def test_syslog_format(set_console_ip, debug_threshold, tmpdir):
+    log_path = os.path.join(tmpdir.strpath, 'app.log')
+    with patch('qpylib.log_qpylib._log_file_location') as mock_log_location:
+        mock_log_location.return_value = log_path
+
+        qpylib.create_log()
+
+        log_file_handler = qpylib.log_qpylib.QLOGGER.handlers[0]
+        syslog_handler = qpylib.log_qpylib.QLOGGER.handlers[1]
+
+        original_log_file_formatter = log_file_handler.formatter
+
+        log_file_handler.setFormatter(syslog_handler.formatter)
+
+        qpylib.log('hello', 'DEBUG')
+
+        log_output = open(mock_log_location(), 'r').read().split(' ')
+
+        # Restore formatter so this test has no side effects
+        log_file_handler.setFormatter(original_log_file_formatter)
+
+        # Assert header is RFC 5425 compliant
+        assert log_output[0] == '1'
+        assert validate_date(log_output[1], "%Y-%m-%dT%H:%M:%S%z")
+        assert log_output[2] == str(qpylib.get_app_id())

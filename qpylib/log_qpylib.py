@@ -9,6 +9,7 @@ from . import util_qpylib
 
 APP_FILE_LOG_FORMAT = '%(asctime)s [%(module)s.%(funcName)s] [%(threadName)s] [%(levelname)s] - %(message)s'
 APP_CONSOLE_LOG_FORMAT = '%(asctime)s %(module)s.%(funcName)s: %(message)s'
+SYSLOG_APP_LOG_FORMAT = '1 %(asctime)s [app_id] %(message)s'
 
 QLOGGER = 0
 
@@ -28,10 +29,11 @@ def create_log():
 
     if not util_qpylib.is_sdk():
         console_ip = app_qpylib.get_console_ip()
+        app_id = app_qpylib.get_app_id()
         if util_qpylib.is_ipv6_address(console_ip):
             console_ip = console_ip[1:-1]
         syslog_handler = SysLogHandler(address=(console_ip, 514))
-        syslog_handler.setFormatter(logging.Formatter(APP_CONSOLE_LOG_FORMAT))
+        syslog_handler.setFormatter(logging.Formatter(SYSLOG_APP_LOG_FORMAT.replace('[app_id]', str(app_id)), "%Y-%m-%dT%H:%M:%S%z"))
         QLOGGER.addHandler(syslog_handler)
 
 def set_log_level(level='INFO'):
