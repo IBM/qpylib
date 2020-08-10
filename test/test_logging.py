@@ -8,9 +8,9 @@ from unittest.mock import patch
 import logging
 from logging.handlers import RotatingFileHandler, SysLogHandler
 import os
+import datetime
 import pytest
 from qpylib import qpylib, log_qpylib
-import datetime
 
 APP_FILE_LOG_FORMAT = '[{0}] - [APP_ID/1001][NOT:{1}] {2}'
 
@@ -19,9 +19,9 @@ MANIFEST_JSON_ROOT_PATH = 'qpylib.app_qpylib.get_root_path'
 def manifest_path(manifest_file):
     return os.path.join(os.path.dirname(__file__), 'manifests', manifest_file)
 
-def validate_date(text, format):
+def validate_date(text, fmt):
     try:
-        datetime.datetime.strptime(text, format)
+        datetime.datetime.strptime(text, fmt)
         return True
     except ValueError:
         return False

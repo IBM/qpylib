@@ -33,7 +33,8 @@ def create_log():
         if util_qpylib.is_ipv6_address(console_ip):
             console_ip = console_ip[1:-1]
         syslog_handler = SysLogHandler(address=(console_ip, 514))
-        syslog_handler.setFormatter(logging.Formatter(SYSLOG_APP_LOG_FORMAT.replace('[app_id]', str(app_id)), "%Y-%m-%dT%H:%M:%S%z"))
+        syslog_app_format = SYSLOG_APP_LOG_FORMAT.replace('[app_id]', str(app_id))
+        syslog_handler.setFormatter(logging.Formatter(syslog_app_format, "%Y-%m-%dT%H:%M:%S%z"))
         QLOGGER.addHandler(syslog_handler)
 
 def set_log_level(level='INFO'):
