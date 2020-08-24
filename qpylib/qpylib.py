@@ -14,21 +14,27 @@ from . import util_qpylib
 
 def log(message, level='INFO'):
     ''' Logs a message at the given level, which defaults to INFO.
-        Level values: DEBUG, INFO, WARNING, ERROR, CRITICAL.
+        Level values: DEBUG, INFO, WARNING, ERROR, EXCEPTION, CRITICAL.
+        EXCEPTION is ERROR plus extra exception details.
         Raises RuntimeError if logging was not previously initialised
         by a call to qpylib.create_log().
+        Raises ValueError if level is invalid.
     '''
     log_qpylib.log(message, level)
 
 def create_log():
-    ''' Initialises logging with INFO as the threshold log level.
-        Must be called before any call to qpylib.log().
+    ''' Initialises logging with threshold log level set to the value
+        of the "log_level" field in the app manifest.json, or INFO if
+        that field is absent.
+        Must be called before any call to log() or set_log_level().
+        Raises ValueError if the threshold log level is invalid.
     '''
     log_qpylib.create_log()
 
 def set_log_level(level):
     ''' Sets the threshold log level.
         Level values: DEBUG, INFO, WARNING, ERROR, CRITICAL.
+        Raises ValueError if level is invalid.
     '''
     log_qpylib.set_log_level(level)
 
