@@ -5,7 +5,6 @@
 import logging
 from logging.handlers import RotatingFileHandler, SysLogHandler
 import re
-import socket
 from . import app_qpylib, util_qpylib
 
 # Log format for local file logging.
@@ -23,19 +22,17 @@ APP_FILE_LOG_FORMAT = '%(asctime)s [%(threadName)s] [%(levelname)s] [APP_ID:APPI
 # PRI is taken care of by SysLogHandler and not included in the log format below.
 # VERSION is hard-coded to 1.
 # TIMESTAMP in the specification is e.g. 2020-04-12T19:20:50.345678+01:00
-#   For the seconds fraction, %f is not supported in "time" module, which is what the logging
-#   module uses. Instead, SYSLOG_LOG_FORMAT uses asctime and msecs plus SYSLOG_TIME_FORMAT.
-#   This means the UTC offset (%z) cannot be included, so timestamps will look like this:
-#     2020-04-12T19:20:50.345
+#   Seconds fraction is not supported in "time" module, which is what the logging
+#   module uses. SYSLOG_LOG_FORMAT uses asctime formatted with SYSLOG_TIME_FORMAT.
 # HOSTNAME is set to the container IP address.
 # APPNAME is set to a sanitised copy of the app manifest name field.
 # PROCID is set to the app ID.
 #   HOSTNAME, APPNAME and PROCID are all constants, replaced in the format string with their values.
 # MSGID and STRUCTURED-DATA are set to the Syslog nil value '-'.
-# Example: 1 2020-08-21T14:16:51.812 192.168.0.15 MyExampleApp 1005 - - [NOT:0000006000] hello
+# Example: <14>1 2020-08-21T14:16:51+0100 192.168.0.15 MyExampleApp 1005 - - [NOT:0000006000] hello
 
-SYSLOG_LOG_FORMAT = '1 %(asctime)s.%(msecs)d HOSTNAME APPNAME PROCID - - [NOT:%(ncode)s] %(message)s'
-SYSLOG_TIME_FORMAT = '%Y-%m-%dT%H:%M:%S'
+SYSLOG_LOG_FORMAT = '1 %(asctime)s HOSTNAME APPNAME PROCID - - [NOT:%(ncode)s] %(message)s'
+SYSLOG_TIME_FORMAT = '%Y-%m-%dT%H:%M:%S%z'
 
 # Globals related to logging.Logger instance.
 QLOGGER = None
@@ -46,7 +43,10 @@ def create_log():
     QLOGGER = logging.getLogger('com.ibm.applicationLogger')
     QLOGGER.setLevel(_default_log_level())
     QLOGGER.addFilter(NotificationCodeFilter())
-    _add_handlers()
+
+    app_id = str(app_qpylib.get_app_id())
+    QLOGGER.addHandler(_create_file_handler(app_id))
+    QLOGGER.addHandler(_create_syslog_handler(app_id))
 
     global LOG_LEVEL_TO_FUNCTION
     LOG_LEVEL_TO_FUNCTION = {
@@ -79,13 +79,6 @@ def _default_log_level():
 def _log_file_location():
     return app_qpylib.get_log_path('app.log')
 
-def _add_handlers():
-    global QLOGGER
-    app_id = str(app_qpylib.get_app_id())
-    QLOGGER.addHandler(_create_file_handler(app_id))
-    if not util_qpylib.is_sdk():
-        QLOGGER.addHandler(_create_syslog_handler(app_id))
-
 def _create_file_handler(app_id):
     handler = RotatingFileHandler(_log_file_location(), maxBytes=2*1024*1024, backupCount=5)
     log_format = APP_FILE_LOG_FORMAT.replace('APPID', app_id)
@@ -99,7 +92,7 @@ def _create_syslog_handler(app_id):
     return handler
 
 def _create_syslog_log_format(app_id):
-    return SYSLOG_LOG_FORMAT.replace('HOSTNAME', _get_container_ip()) \
+    return SYSLOG_LOG_FORMAT.replace('HOSTNAME', util_qpylib.get_container_ip()) \
                             .replace('APPNAME', _create_sanitized_app_name()) \
                             .replace('PROCID', app_id)
 
@@ -108,9 +101,6 @@ def _get_address_for_syslog():
     if util_qpylib.is_ipv6_address(console_ip):
         console_ip = console_ip[1:-1]
     return (console_ip, 514)
-
-def _get_container_ip():
-    return socket.gethostbyname(socket.gethostname())
 
 def _create_sanitized_app_name():
     ''' Extracts app name from manifest, strips unwanted characters,
