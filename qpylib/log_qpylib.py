@@ -44,9 +44,8 @@ def create_log():
     QLOGGER.setLevel(_default_log_level())
     QLOGGER.addFilter(NotificationCodeFilter())
 
-    app_id = str(app_qpylib.get_app_id())
-    QLOGGER.addHandler(_create_file_handler(app_id))
-    QLOGGER.addHandler(_create_syslog_handler(app_id))
+    for handler in _generate_handlers():
+        QLOGGER.addHandler(handler)
 
     global LOG_LEVEL_TO_FUNCTION
     LOG_LEVEL_TO_FUNCTION = {
@@ -79,28 +78,44 @@ def _default_log_level():
 def _log_file_location():
     return app_qpylib.get_log_path('app.log')
 
+def _generate_handlers():
+    handlers = []
+
+    app_id = str(app_qpylib.get_app_id())
+    handlers.append(_create_file_handler(app_id))
+
+    address = None
+    try:
+        address = _get_address_for_syslog()
+    except KeyError:
+        pass
+    if address:
+        handlers.append(_create_syslog_handler(address, app_id))
+
+    return handlers
+
 def _create_file_handler(app_id):
     handler = RotatingFileHandler(_log_file_location(), maxBytes=2*1024*1024, backupCount=5)
     log_format = APP_FILE_LOG_FORMAT.replace('APPID', app_id)
     handler.setFormatter(logging.Formatter(log_format))
     return handler
 
-def _create_syslog_handler(app_id):
-    handler = SysLogHandler(address=_get_address_for_syslog())
+def _create_syslog_handler(syslog_address, app_id):
+    handler = SysLogHandler(address=syslog_address)
     log_format = _create_syslog_log_format(app_id)
     handler.setFormatter(logging.Formatter(log_format, SYSLOG_TIME_FORMAT))
     return handler
-
-def _create_syslog_log_format(app_id):
-    return SYSLOG_LOG_FORMAT.replace('HOSTNAME', util_qpylib.get_container_ip()) \
-                            .replace('APPNAME', _create_sanitized_app_name()) \
-                            .replace('PROCID', app_id)
 
 def _get_address_for_syslog():
     console_ip = app_qpylib.get_console_ip()
     if util_qpylib.is_ipv6_address(console_ip):
         console_ip = console_ip[1:-1]
     return (console_ip, 514)
+
+def _create_syslog_log_format(app_id):
+    return SYSLOG_LOG_FORMAT.replace('HOSTNAME', util_qpylib.get_container_ip()) \
+                            .replace('APPNAME', _create_sanitized_app_name()) \
+                            .replace('PROCID', app_id)
 
 def _create_sanitized_app_name():
     ''' Extracts app name from manifest, strips unwanted characters,

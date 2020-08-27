@@ -12,6 +12,18 @@ from . import util_qpylib
 
 # ==== Logging ====
 
+def create_log():
+    ''' Initialises logging.
+        Threshold log level is set to the value of the "log_level" field
+        in the app manifest.json, or INFO if that field is absent.
+        Creates a file log handler which directs logs to store/log/app.log.
+        Creates a Syslog handler, but only if environment variable
+        QRADAR_CONSOLE_IP is set.
+        Must be called before any call to log() or set_log_level().
+        Raises ValueError if the manifest threshold log level is invalid.
+    '''
+    log_qpylib.create_log()
+
 def log(message, level='INFO'):
     ''' Logs a message at the given level, which defaults to INFO.
         Level values: DEBUG, INFO, WARNING, ERROR, EXCEPTION, CRITICAL.
@@ -22,18 +34,11 @@ def log(message, level='INFO'):
     '''
     log_qpylib.log(message, level)
 
-def create_log():
-    ''' Initialises logging with threshold log level set to the value
-        of the "log_level" field in the app manifest.json, or INFO if
-        that field is absent.
-        Must be called before any call to log() or set_log_level().
-        Raises ValueError if the threshold log level is invalid.
-    '''
-    log_qpylib.create_log()
-
 def set_log_level(level):
     ''' Sets the threshold log level.
         Level values: DEBUG, INFO, WARNING, ERROR, CRITICAL.
+        Raises RuntimeError if logging was not previously initialised
+        by a call to qpylib.create_log().
         Raises ValueError if level is invalid.
     '''
     log_qpylib.set_log_level(level)

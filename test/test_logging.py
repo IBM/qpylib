@@ -95,49 +95,20 @@ def test_create_sanitized_app_name_truncates_to_48_chars(mock_get_app_name):
     assert log_qpylib._create_sanitized_app_name() == \
         'MyAppNameIsVeryLongSoThatICanMakeThisTestSucceed'
 
-# ==== set_log_level ====
-
-def test_set_log_level_without_create_raises_error():
-    with pytest.raises(RuntimeError, match='You cannot use set_log_level before logging has been initialised'):
-        qpylib.set_log_level('DEBUG')
-
-SOCKET_HOST = 'socket.gethostbyname'
-
-@patch(MANIFEST_JSON_ROOT_PATH, return_value=manifest_path('installed.json'))
-@patch(SOCKET_HOST, return_value='192.168.1.2')
-def test_set_log_level_with_bad_level_raises_error(mock_socket, mock_manifest, set_console_ip,
-                                                   info_threshold, tmpdir):
-    log_path = os.path.join(tmpdir.strpath, 'app.log')
-    with patch('qpylib.log_qpylib._log_file_location') as mock_log_location:
-        mock_log_location.return_value = log_path
-        qpylib.create_log()
-        with pytest.raises(ValueError, match="Unknown level: 'BAD'"):
-            qpylib.set_log_level('BAD')
-
-@patch(MANIFEST_JSON_ROOT_PATH, return_value=manifest_path('installed.json'))
-@patch(SOCKET_HOST, return_value='192.168.1.2')
-def test_set_log_level_sets_correct_level(mock_socket, mock_manifest, set_console_ip,
-                                          info_threshold, tmpdir):
-    log_path = os.path.join(tmpdir.strpath, 'app.log')
-    with patch('qpylib.log_qpylib._log_file_location') as mock_log_location:
-        mock_log_location.return_value = log_path
-        qpylib.create_log()
-    qpylib.set_log_level('DEBUG')
-    assert log_qpylib.QLOGGER.getEffectiveLevel() == logging.DEBUG
-
 # ==== create_log ====
 
-def test_create_log_without_console_ip_env_var_raises_error(info_threshold, tmpdir):
+def test_create_log_without_console_ip_skips_syslog_handler(info_threshold, tmpdir):
     log_path = os.path.join(tmpdir.strpath, 'app.log')
     with patch('qpylib.log_qpylib._log_file_location') as mock_log_location:
         mock_log_location.return_value = log_path
-        with pytest.raises(KeyError, match='Environment variable QRADAR_CONSOLE_IP is not set'):
-            qpylib.create_log()
+        qpylib.create_log()
+    assert len(log_qpylib.QLOGGER.handlers) == 1
+    assert isinstance(log_qpylib.QLOGGER.handlers[0], RotatingFileHandler)
 
 @patch(MANIFEST_JSON_ROOT_PATH, return_value=manifest_path('installed.json'))
-@patch(SOCKET_HOST, return_value='192.168.1.2')
-def test_create_log_success(mock_socket, mock_manifest, set_console_ip,
-                            info_threshold, tmpdir):
+@patch('socket.gethostbyname', return_value='192.168.1.2')
+def test_create_log_all_handlers(mock_socket, mock_manifest, set_console_ip,
+                                 info_threshold, tmpdir):
     log_path = os.path.join(tmpdir.strpath, 'app.log')
     with patch('qpylib.log_qpylib._log_file_location') as mock_log_location:
         mock_log_location.return_value = log_path
@@ -164,25 +135,33 @@ def check_syslog_handler_attrs(handler):
         '1 %(asctime)s 192.168.1.2 LiveManifest 1001 - - [NOT:%(ncode)s] %(message)s'
     assert handler.formatter.datefmt == log_qpylib.SYSLOG_TIME_FORMAT
 
-# ==== log ====
+# ==== set_log_level ====
 
-def test_log_without_create_raises_error():
-    with pytest.raises(RuntimeError, match='You cannot use log before logging has been initialised'):
-        qpylib.log('hello')
+def test_set_log_level_without_create_raises_error():
+    with pytest.raises(RuntimeError, match='You cannot use set_log_level before logging has been initialised'):
+        qpylib.set_log_level('DEBUG')
 
-@patch(MANIFEST_JSON_ROOT_PATH, return_value=manifest_path('installed.json'))
-@patch(SOCKET_HOST, return_value='192.168.1.2')
-def test_log_with_bad_level_raises_error(mock_socket, mock_manifest, set_console_ip,
-                                         info_threshold, tmpdir):
+def test_set_log_level_with_bad_level_raises_error(info_threshold, tmpdir):
     log_path = os.path.join(tmpdir.strpath, 'app.log')
     with patch('qpylib.log_qpylib._log_file_location') as mock_log_location:
         mock_log_location.return_value = log_path
         qpylib.create_log()
         with pytest.raises(ValueError, match="Unknown level: 'BAD'"):
-            qpylib.log('hello', 'BAD')
+            qpylib.set_log_level('BAD')
 
-# Verification of log content is not possible for SysLogHandler, so all of the
-# following tests only check RotatingFileHandler output.
+def test_set_log_level_sets_correct_level(info_threshold, tmpdir):
+    log_path = os.path.join(tmpdir.strpath, 'app.log')
+    with patch('qpylib.log_qpylib._log_file_location') as mock_log_location:
+        mock_log_location.return_value = log_path
+        qpylib.create_log()
+    qpylib.set_log_level('DEBUG')
+    assert log_qpylib.QLOGGER.getEffectiveLevel() == logging.DEBUG
+
+# ==== log ====
+
+def test_log_without_create_raises_error():
+    with pytest.raises(RuntimeError, match='You cannot use log before logging has been initialised'):
+        qpylib.log('hello')
 
 APP_FILE_LOG_FORMAT = '[{0}] [APP_ID:1001] [NOT:{1}] {2}'
 
@@ -200,10 +179,18 @@ def verify_log_file_content(log_path, expected_lines, not_expected_lines=[]):
             assert APP_FILE_LOG_FORMAT.format(
                 line['level'], level_to_code(line['level']), line['text']) not in content
 
-@patch(MANIFEST_JSON_ROOT_PATH, return_value=manifest_path('installed.json'))
-@patch(SOCKET_HOST, return_value='192.168.1.2')
-def test_all_log_levels_with_manifest_info_threshold(mock_socket, mock_manifest, set_console_ip,
-                                                     info_threshold, tmpdir):
+# Verification of log content is not possible for SysLogHandler, so all of the
+# following tests don't set QRADAR_CONSOLE_IP and only check RotatingFileHandler output.
+
+def test_log_with_bad_level_raises_error(info_threshold, tmpdir):
+    log_path = os.path.join(tmpdir.strpath, 'app.log')
+    with patch('qpylib.log_qpylib._log_file_location') as mock_log_location:
+        mock_log_location.return_value = log_path
+        qpylib.create_log()
+        with pytest.raises(ValueError, match="Unknown level: 'BAD'"):
+            qpylib.log('hello', 'BAD')
+
+def test_all_log_levels_with_manifest_info_threshold(info_threshold, tmpdir):
     log_path = os.path.join(tmpdir.strpath, 'app.log')
     with patch('qpylib.log_qpylib._log_file_location') as mock_log_location:
         mock_log_location.return_value = log_path
@@ -224,10 +211,7 @@ def test_all_log_levels_with_manifest_info_threshold(mock_socket, mock_manifest,
         {'level': 'ERROR', 'text': 'hello exception'}], \
         not_expected_lines=[{'level': 'DEBUG', 'text': 'hello debug'}])
 
-@patch(MANIFEST_JSON_ROOT_PATH, return_value=manifest_path('installed.json'))
-@patch(SOCKET_HOST, return_value='192.168.1.2')
-def test_all_log_levels_with_manifest_debug_threshold(mock_socket, mock_manifest, set_console_ip,
-                                                      debug_threshold, tmpdir):
+def test_all_log_levels_with_manifest_debug_threshold(debug_threshold, tmpdir):
     log_path = os.path.join(tmpdir.strpath, 'app.log')
     with patch('qpylib.log_qpylib._log_file_location') as mock_log_location:
         mock_log_location.return_value = log_path
@@ -248,10 +232,7 @@ def test_all_log_levels_with_manifest_debug_threshold(mock_socket, mock_manifest
         {'level': 'CRITICAL', 'text': 'hello critical'},
         {'level': 'ERROR', 'text': 'hello exception'}])
 
-@patch(MANIFEST_JSON_ROOT_PATH, return_value=manifest_path('installed.json'))
-@patch(SOCKET_HOST, return_value='192.168.1.2')
-def test_all_log_levels_with_set_debug_threshold(mock_socket, mock_manifest, set_console_ip,
-                                                 info_threshold, tmpdir):
+def test_all_log_levels_with_set_debug_threshold(info_threshold, tmpdir):
     log_path = os.path.join(tmpdir.strpath, 'app.log')
     with patch('qpylib.log_qpylib._log_file_location') as mock_log_location:
         mock_log_location.return_value = log_path
@@ -273,10 +254,7 @@ def test_all_log_levels_with_set_debug_threshold(mock_socket, mock_manifest, set
         {'level': 'CRITICAL', 'text': 'hello critical'},
         {'level': 'ERROR', 'text': 'hello exception'}])
 
-@patch(MANIFEST_JSON_ROOT_PATH, return_value=manifest_path('installed.json'))
-@patch(SOCKET_HOST, return_value='192.168.1.2')
-def test_all_log_levels_with_set_warning_threshold(mock_socket, mock_manifest, set_console_ip,
-                                                   info_threshold, tmpdir):
+def test_all_log_levels_with_set_warning_threshold(info_threshold, tmpdir):
     log_path = os.path.join(tmpdir.strpath, 'app.log')
     with patch('qpylib.log_qpylib._log_file_location') as mock_log_location:
         mock_log_location.return_value = log_path
