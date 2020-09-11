@@ -13,6 +13,8 @@ ARIEL_URL = 'https://myhost.ibm.com/api/ariel/searches'
 POST_SEARCH = '{0}?query_expression=select+stuff+from+db'.format(ARIEL_URL)
 GET_SEARCH = '{0}/{1}'.format(ARIEL_URL, SEARCH_ID)
 GET_RESULTS = '{0}/{1}/results'.format(ARIEL_URL, SEARCH_ID)
+DELETE_SEARCH = '{0}/{1}'.format(ARIEL_URL, SEARCH_ID)
+CANCEL_SEARCH = '{0}/{1}?status=CANCELLED'.format(ARIEL_URL, SEARCH_ID)
 
 @pytest.fixture(scope='module', autouse=True)
 def pre_testing_setup():
@@ -153,3 +155,37 @@ def test_results_range_start_and_end():
     assert results_json['result3'] == 42
     assert results_json['result4'] == 99
     assert responses.calls[0].request.headers['Range'] == 'items=3-4'
+
+@responses.activate
+def test_search_delete_failure():
+    responses.add('DELETE', DELETE_SEARCH, status=404,
+                  json={})
+    with pytest.raises(ArielError, match='Ariel search {0} could not be deleted'
+                       .format(SEARCH_ID)):
+        ArielSearch().delete(SEARCH_ID)
+
+@responses.activate
+def test_search_delete_success():
+    responses.add('DELETE', DELETE_SEARCH, status=200,
+                  json={'status': 'COMPLETED', 'search_id': SEARCH_ID})
+    status, search_id = ArielSearch().delete(SEARCH_ID)
+
+    assert status == 'COMPLETED'
+    assert search_id == SEARCH_ID
+
+@responses.activate
+def test_search_cancel_failure():
+    responses.add('POST', CANCEL_SEARCH, status=404,
+                  json={})
+    with pytest.raises(ArielError, match='Ariel search {0} could not be cancelled'
+                       .format(SEARCH_ID)):
+        ArielSearch().cancel(SEARCH_ID)
+
+@responses.activate
+def test_search_cancel_success():
+    responses.add('POST', CANCEL_SEARCH, status=200,
+                  json={'status': 'COMPLETED', 'search_id': SEARCH_ID})
+    status, search_id = ArielSearch().cancel(SEARCH_ID)
+
+    assert status == 'COMPLETED'
+    assert search_id == SEARCH_ID

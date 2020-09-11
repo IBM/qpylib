@@ -108,6 +108,37 @@ class ArielSearch():
                              .format(search_id, response.content))
         return response.json()
 
+    def delete(self, search_id, api_version='latest'):
+        ''' Deletes a previous Ariel search.
+              search_id: Ariel search ID
+              api_version: QRadar API version to use, defaults to latest.
+            Returns a tuple containing search status and search ID.
+            Raises ArielError if the search could not be deleted.
+        '''
+        response = qpylib.REST('DELETE', ArielSearch.SEARCH_ENDPOINT.format(search_id),
+                               headers=self._build_headers(api_version))
+        if response.status_code != 200:
+            raise ArielError('Ariel search {0} could not be deleted: HTTP {1} was returned'
+                             .format(search_id, response.status_code))
+        response_json = response.json()
+        return (response_json['status'], response_json['search_id'])
+
+    def cancel(self, search_id, api_version='latest'):
+        ''' Cancels an ongoing Ariel search.
+              search_id: Ariel search ID.
+              api_version: QRadar API version to use, defaults to latest.
+            Returns a tuple containing search status and search ID.
+            Raises ArielError if the search could not be cancelled.
+        '''
+        response = qpylib.REST('POST', ArielSearch.SEARCH_ENDPOINT.format(search_id),
+                               headers=self._build_headers(api_version),
+                               params={'status': 'CANCELLED'})
+        if response.status_code != 200:
+            raise ArielError('Ariel search {0} could not be cancelled: HTTP {1} was returned'
+                             .format(search_id, response.status_code))
+        response_json = response.json()
+        return (response_json['status'], response_json['search_id'])
+
     @staticmethod
     def _build_headers(api_version):
         headers = {'Accept': 'application/json'}
