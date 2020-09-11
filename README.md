@@ -14,6 +14,9 @@ The qpylib library hosted here is for use only with apps that have been written 
 Python 3 to run on Red Hat Universal Base Image. It is not compatible with apps
 written to run on a CentOS base image.
 
+Most functions are the equivalent of their pre-Github counterparts, although
+there may be some small differences in parameter names.
+
 ## Project details
 
 * [LICENSE](LICENSE)
