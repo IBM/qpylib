@@ -6,9 +6,7 @@ import base64
 import string
 import secrets
 from cryptography.fernet import Fernet
-from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+from . import cryptoutil
 
 class Enginev4():
     ''' Enginev4 uses Fernet encryption.
@@ -30,14 +28,9 @@ class Enginev4():
         return decrypted_bytes.decode('utf-8')
 
     def _derive_key(self):
-        kdf = PBKDF2HMAC(
-            algorithm=hashes.SHA256(),
-            length=32,
-            salt=self.config['salt'].encode('utf-8'),
-            iterations=self.config['iterations'],
-            backend=default_backend()
-        )
-        key = kdf.derive(self.app_uuid.encode('utf-8'))
+        key = cryptoutil.derive_key(self.app_uuid.encode('utf-8'),
+                                    self.config['salt'].encode('utf-8'),
+                                    self.config['iterations'])
         return base64.urlsafe_b64encode(key)
 
     @staticmethod

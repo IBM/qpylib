@@ -5,6 +5,7 @@
 import logging
 from logging.handlers import RotatingFileHandler, SysLogHandler
 import re
+from qpylib.encryption.cryptoutil import derive_key
 from . import app_qpylib, util_qpylib
 
 # Log format for local file logging.
@@ -24,12 +25,14 @@ APP_FILE_LOG_FORMAT = '%(asctime)s [%(threadName)s] [%(levelname)s] [APP_ID:APPI
 # TIMESTAMP in the specification is e.g. 2020-04-12T19:20:50.345678+01:00
 #   Seconds fraction is not supported in "time" module, which is what the logging
 #   module uses. SYSLOG_LOG_FORMAT uses asctime formatted with SYSLOG_TIME_FORMAT.
-# HOSTNAME is set to the container IP address.
+# HOSTNAME is set to a hash generated using the app ID and QRADAR_APP_UUID.
+#   The reason for not using the container host name or IP address is that for a
+#   given app instance, both of those values can change across a reboot.
 # APPNAME is set to a sanitised copy of the app manifest name field.
 # PROCID is set to the app ID.
 #   HOSTNAME, APPNAME and PROCID are all constants, replaced in the format string with their values.
 # MSGID and STRUCTURED-DATA are set to the Syslog nil value '-'.
-# Example: <14>1 2020-08-21T14:16:51+0100 192.168.0.15 MyExampleApp 1005 - - [NOT:0000006000] hello
+# Example: <14>1 2020-08-21T14:16:51+0100 d15fbd9fdd86b30e MyExampleApp 1005 - - [NOT:0000006000] hello
 
 SYSLOG_LOG_FORMAT = '1 %(asctime)s HOSTNAME APPNAME PROCID - - [NOT:%(ncode)s] %(message)s'
 SYSLOG_TIME_FORMAT = '%Y-%m-%dT%H:%M:%S%z'
@@ -85,12 +88,14 @@ def _generate_handlers():
     handlers.append(_create_file_handler(app_id))
 
     address = None
+    qradar_app_uuid = None
     try:
         address = _get_address_for_syslog()
+        qradar_app_uuid = app_qpylib.get_env_var('QRADAR_APP_UUID')
     except KeyError:
         pass
-    if address:
-        handlers.append(_create_syslog_handler(address, app_id))
+    if address and qradar_app_uuid:
+        handlers.append(_create_syslog_handler(address, app_id, qradar_app_uuid))
 
     return handlers
 
@@ -100,9 +105,9 @@ def _create_file_handler(app_id):
     handler.setFormatter(logging.Formatter(log_format))
     return handler
 
-def _create_syslog_handler(syslog_address, app_id):
+def _create_syslog_handler(syslog_address, app_id, qradar_app_uuid):
+    log_format = _create_syslog_log_format(app_id, qradar_app_uuid)
     handler = SysLogHandler(address=syslog_address)
-    log_format = _create_syslog_log_format(app_id)
     handler.setFormatter(logging.Formatter(log_format, SYSLOG_TIME_FORMAT))
     return handler
 
@@ -112,10 +117,21 @@ def _get_address_for_syslog():
         console_ip = console_ip[1:-1]
     return (console_ip, 514)
 
-def _create_syslog_log_format(app_id):
-    return SYSLOG_LOG_FORMAT.replace('HOSTNAME', util_qpylib.get_container_ip()) \
-                            .replace('APPNAME', _create_sanitized_app_name()) \
+def _create_syslog_log_format(app_id, qradar_app_uuid):
+    pseudo_hostname = _create_pseudo_hostname(app_id, qradar_app_uuid)
+    sanitized_app_name = _create_sanitized_app_name()
+    return SYSLOG_LOG_FORMAT.replace('HOSTNAME', pseudo_hostname) \
+                            .replace('APPNAME', sanitized_app_name) \
                             .replace('PROCID', app_id)
+
+def _create_pseudo_hostname(app_id, qradar_app_uuid):
+    # This uses a key derivation function rather than a straightforward hash
+    # function so that the unique value generated has 16 characters (hex).
+    # Anything longer would occupy too much space in each log record.
+    key = derive_key(app_id.encode('utf-8'),
+                     qradar_app_uuid.encode('utf-8'),
+                     length=8)
+    return key.hex()
 
 def _create_sanitized_app_name():
     ''' Extracts app name from manifest, strips unwanted characters,

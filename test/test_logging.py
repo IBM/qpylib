@@ -33,6 +33,12 @@ def set_console_ip():
     yield
     del os.environ['QRADAR_CONSOLE_IP']
 
+@pytest.fixture(scope='function')
+def set_app_uuid():
+    os.environ['QRADAR_APP_UUID'] = 'd9830bbb-5958-4e42-acc8-0e7ac5182c0a'
+    yield
+    del os.environ['QRADAR_APP_UUID']
+
 # Threshold fixtures are used to control logger.setLevel in create_log().
 @pytest.fixture(scope='function')
 def info_threshold():
@@ -97,7 +103,15 @@ def test_create_sanitized_app_name_truncates_to_48_chars(mock_get_app_name):
 
 # ==== create_log ====
 
-def test_create_log_without_console_ip_skips_syslog_handler(info_threshold, tmpdir):
+def test_create_log_without_console_ip_skips_syslog_handler(set_app_uuid, info_threshold, tmpdir):
+    log_path = os.path.join(tmpdir.strpath, 'app.log')
+    with patch('qpylib.log_qpylib._log_file_location') as mock_log_location:
+        mock_log_location.return_value = log_path
+        qpylib.create_log()
+    assert len(log_qpylib.QLOGGER.handlers) == 1
+    assert isinstance(log_qpylib.QLOGGER.handlers[0], RotatingFileHandler)
+
+def test_create_log_without_qradaf_app_uuid_skips_syslog_handler(set_console_ip, info_threshold, tmpdir):
     log_path = os.path.join(tmpdir.strpath, 'app.log')
     with patch('qpylib.log_qpylib._log_file_location') as mock_log_location:
         mock_log_location.return_value = log_path
@@ -106,8 +120,7 @@ def test_create_log_without_console_ip_skips_syslog_handler(info_threshold, tmpd
     assert isinstance(log_qpylib.QLOGGER.handlers[0], RotatingFileHandler)
 
 @patch(MANIFEST_JSON_ROOT_PATH, return_value=manifest_path('installed.json'))
-@patch('socket.gethostbyname', return_value='192.168.1.2')
-def test_create_log_all_handlers(mock_socket, mock_manifest, set_console_ip,
+def test_create_log_all_handlers(mock_manifest, set_console_ip, set_app_uuid,
                                  info_threshold, tmpdir):
     log_path = os.path.join(tmpdir.strpath, 'app.log')
     with patch('qpylib.log_qpylib._log_file_location') as mock_log_location:
@@ -132,7 +145,7 @@ def check_syslog_handler_attrs(handler):
     assert handler.address[0] == '9.123.234.101'
     assert handler.address[1] == 514
     assert handler.formatter._fmt == \
-        '1 %(asctime)s 192.168.1.2 LiveManifest 1001 - - [NOT:%(ncode)s] %(message)s'
+        '1 %(asctime)s 015fbd9fdd86b30e LiveManifest 1001 - - [NOT:%(ncode)s] %(message)s'
     assert handler.formatter.datefmt == log_qpylib.SYSLOG_TIME_FORMAT
 
 # ==== set_log_level ====
