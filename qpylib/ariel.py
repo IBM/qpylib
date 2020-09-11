@@ -44,10 +44,11 @@ class ArielSearch():
         response_json = response.json()
         return (response_json['status'], response_json['search_id'])
 
-    def search_sync(self, query, timeout=60, api_version='latest'):
+    def search_sync(self, query, timeout=60, sleep_interval=10, api_version='latest'):
         ''' Initiates a synchronous Ariel search.
               query: AQL query to execute.
               timeout: number of seconds to wait for search to complete.
+              sleep_interval: number of seconds to sleep before retrying status check.
               api_version: QRadar API version to use, defaults to latest.
             Returns a tuple containing search ID and record count.
             Raises ArielError if any of these occur:
@@ -67,7 +68,7 @@ class ArielSearch():
                 raise ArielError('Ariel search {0} failed: {1}'.format(search_id, status),
                                  aql=query)
             if time.time() < end_time:
-                time.sleep(10)
+                time.sleep(sleep_interval)
                 continue
             raise ArielError('Ariel search {0} did not complete within {1}s'
                              .format(search_id, timeout), aql=query)

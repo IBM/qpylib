@@ -32,12 +32,20 @@ def test_search_create_failure():
         ArielSearch().search(DUMMY_QUERY)
 
 @responses.activate
+def test_search_create_unexpected_response():
+    responses.add('POST', POST_SEARCH, status=500,
+                  body='Something bad happened')
+    with pytest.raises(ArielError, match='Something bad happened'):
+        ArielSearch().search(DUMMY_QUERY)
+
+@responses.activate
 def test_search_create_success():
     responses.add('POST', POST_SEARCH, status=201,
                   json={'status': 'WAIT', 'search_id': SEARCH_ID})
-    status, search_id = ArielSearch().search(DUMMY_QUERY)
+    status, search_id = ArielSearch().search(DUMMY_QUERY, api_version='12')
     assert status == 'WAIT'
     assert search_id == SEARCH_ID
+    assert responses.calls[0].request.headers['Version'] == '12'
 
 @responses.activate
 def test_search_sync_create_failure():
@@ -62,8 +70,8 @@ def test_search_sync_timeout():
     responses.add('GET', GET_SEARCH, status=200,
                   json={'status': 'WAIT', 'record_count': 0})
     with pytest.raises(ArielError, match='Ariel search {0} did not complete within {1}s'
-                       .format(SEARCH_ID, 0)):
-        ArielSearch().search_sync(DUMMY_QUERY, timeout=0)
+                       .format(SEARCH_ID, 2)):
+        ArielSearch().search_sync(DUMMY_QUERY, timeout=2, sleep_interval=2)
 
 @responses.activate
 def test_search_sync_error():
@@ -89,9 +97,10 @@ def test_search_sync_completed():
                   json={'status': 'WAIT', 'search_id': SEARCH_ID})
     responses.add('GET', GET_SEARCH, status=200,
                   json={'status': 'COMPLETED', 'record_count': 3})
-    search_id, record_count = ArielSearch().search_sync(DUMMY_QUERY, timeout=0)
+    search_id, record_count = ArielSearch().search_sync(DUMMY_QUERY, timeout=0, api_version='14')
     assert search_id == SEARCH_ID
     assert record_count == 3
+    assert responses.calls[0].request.headers['Version'] == '14'
 
 @responses.activate
 def test_status_failure():
@@ -104,9 +113,10 @@ def test_status_failure():
 def test_status_success():
     responses.add('GET', GET_SEARCH, status=200,
                   json={'status': 'COMPLETED', 'record_count': 3})
-    status, record_count = ArielSearch().status(SEARCH_ID)
+    status, record_count = ArielSearch().status(SEARCH_ID, api_version='15')
     assert status == 'COMPLETED'
     assert record_count == 3
+    assert responses.calls[0].request.headers['Version'] == '15'
 
 @responses.activate
 def test_results_failure():

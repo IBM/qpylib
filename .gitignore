@@ -1,4 +1,6 @@
 .cache
+.coverage
+.idea
 .project
 .pydevproject
 .pytest_cache
@@ -9,8 +11,9 @@
 *.pyc
 *.swp
 build
+coverage.xml
+coverage-html
 dist
 qpylib.egg-info
-RemoteSystemsTempFiles
 qpylib/version.py
-.idea/
+RemoteSystemsTempFiles

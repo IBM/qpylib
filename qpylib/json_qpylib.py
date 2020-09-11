@@ -5,82 +5,73 @@
 import json
 from . import app_qpylib
 
-# A dictionary of jsonld context types mapped to the type name
 JSONLD_TYPES = {}
+KEY_CONTEXT = '@context'
+KEY_TYPE = '@type'
+KEY_ID = '@id'
 
 def register_jsonld_endpoints():
-    manifest = app_qpylib.get_manifest_json()
-
-    services = None
-    if 'services' in manifest.keys():
-        services = manifest['services']
-    if services is None:
+    try:
+        services = app_qpylib.get_manifest_json()['services']
+    except KeyError:
         return
 
     for service in services:
-        endpoints = None
-        if 'endpoints' in service.keys():
+        try:
             endpoints = service['endpoints']
-        if endpoints is None:
+        except KeyError:
             continue
         for endpoint in endpoints:
-            jsonld_context = None
-            if 'request_mime_type' in endpoint.keys():
-                argument = endpoint
-                jsonld_context = _extract_jsonld_context(argument, 'request_mime_type', 'request_body_type')
-                register_jsonld_type_from_context(jsonld_context)
-            if 'response' in endpoint.keys():
-                argument = endpoint['response']
-                jsonld_context = _extract_jsonld_context(argument, 'mime_type', 'body_type')
-                register_jsonld_type_from_context(jsonld_context)
+            _extract_and_register_jsonld_context(endpoint, 'request_mime_type', 'request_body_type')
+            try:
+                _extract_and_register_jsonld_context(endpoint['response'], 'mime_type', 'body_type')
+            except KeyError:
+                pass
 
-def _extract_jsonld_context(argument, mime_id, context_id):
-    if mime_id in argument.keys() and context_id in argument.keys():
-        if argument[mime_id] == 'application/json+ld':
-            return argument[context_id]
-    return None
-
-def register_jsonld_type_from_context(context):
-    if context is not None:
-        jsonld_type = _extract_type(context)
-        register_jsonld_type(jsonld_type, context)
+def _extract_and_register_jsonld_context(endpoint_direction, mime_id, body_id):
+    try:
+        if endpoint_direction[mime_id] == 'application/json+ld':
+            register_jsonld_type_from_context(endpoint_direction[body_id])
+    except KeyError:
+        pass
 
 def register_jsonld_type(jsonld_type, context):
     global JSONLD_TYPES
     JSONLD_TYPES[str(jsonld_type)] = context
 
+def register_jsonld_type_from_context(context):
+    jsonld_type = _extract_type_from_context(context)
+    if jsonld_type:
+        register_jsonld_type(jsonld_type, context)
+
+def _extract_type_from_context(context):
+    if KEY_CONTEXT in context.keys():
+        at_context = context[KEY_CONTEXT]
+        if KEY_TYPE in at_context.keys():
+            if at_context[KEY_TYPE] == KEY_ID and KEY_ID in at_context.keys():
+                return at_context[KEY_ID]
+            return at_context[KEY_TYPE]
+    return None
+
 def get_jsonld_type(jsonld_type):
     global JSONLD_TYPES
-    if jsonld_type in JSONLD_TYPES.keys():
+    try:
         return JSONLD_TYPES[str(jsonld_type)]
-    raise ValueError('json ld key has not been registered')
+    except KeyError:
+        raise ValueError('JSON-LD type {0} has not been registered'.format(str(jsonld_type)))
 
-def _extract_type(argument):
-    type_id = None
-    if '@context' in argument.keys():
-        context = argument['@context']
-        if '@type' in context.keys():
-            type_id = context['@type']
-        if type_id == '@id' and '@id' in context.keys():
-            type_id = context['@id']
-    return type_id
-
-def render_json_ld_type(jld_type, data, jld_id=None):
+def render_jsonld_type(jld_type, data, jld_id=None):
     jld_context = get_jsonld_type(jld_type)
-    json_dict = {}
+    json_dict = {KEY_CONTEXT: jld_context[KEY_CONTEXT], KEY_TYPE: jld_type}
+    if jld_id:
+        json_dict[KEY_ID] = jld_id
     for json_key in data:
         json_dict[json_key] = data[json_key]
-
-    json_dict['@context'] = jld_context['@context']
-    json_dict['@type'] = jld_type
-    if jld_id is not None:
-        json_dict['@type'] = jld_type
-
     return json.dumps(json_dict, sort_keys=True)
 
 # pylint: disable=too-many-arguments
 def json_ld(jld_context, jld_id, jld_type, name, description, data):
-    return json.dumps({'@context': jld_context, '@id': jld_id, '@type': jld_type, 'name': name,
+    return json.dumps({KEY_CONTEXT: jld_context, KEY_ID: jld_id, KEY_TYPE: jld_type, 'name': name,
                        'description': description, 'data': data}, sort_keys=True)
 
 def json_html(html):

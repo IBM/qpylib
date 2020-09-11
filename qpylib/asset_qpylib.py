@@ -6,7 +6,7 @@ from . import app_qpylib
 from . import json_qpylib
 
 # Context location yet to be finalised.
-JSON_LD_CONTEXT = 'http://qradar/context/location'
+JSON_LD_CONTEXT = 'https://qradar/context/location'
 
 # The api method to GET an individual asset is not yet supported.
 def get_asset_url(asset_id):
@@ -41,7 +41,7 @@ def get_asset_json_ld(asset_id):
                                get_asset_url_full(asset_id),
                                'asset',
                                'Asset details',
-                               'Asset details for id ' + asset_id,
+                               'Asset details for id ' + str(asset_id),
                                asset_json)
 
 def get_asset_json_html(asset_id, generate_html=None):
