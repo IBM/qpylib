@@ -158,34 +158,26 @@ def test_results_range_start_and_end():
 
 @responses.activate
 def test_search_delete_failure():
-    responses.add('DELETE', DELETE_SEARCH, status=404,
-                  json={})
-    with pytest.raises(ArielError, match='Ariel search {0} could not be deleted'
+    responses.add('DELETE', DELETE_SEARCH, status=500)
+    with pytest.raises(ArielError,
+                       match='Ariel search {0} could not be deleted: HTTP 500 was returned'
                        .format(SEARCH_ID)):
         ArielSearch().delete(SEARCH_ID)
 
 @responses.activate
 def test_search_delete_success():
-    responses.add('DELETE', DELETE_SEARCH, status=200,
-                  json={'status': 'COMPLETED', 'search_id': SEARCH_ID})
-    status, search_id = ArielSearch().delete(SEARCH_ID)
-
-    assert status == 'COMPLETED'
-    assert search_id == SEARCH_ID
+    responses.add('DELETE', DELETE_SEARCH, status=202, json={'status': 'COMPLETED'})
+    assert ArielSearch().delete(SEARCH_ID) == 'COMPLETED'
 
 @responses.activate
 def test_search_cancel_failure():
-    responses.add('POST', CANCEL_SEARCH, status=404,
-                  json={})
-    with pytest.raises(ArielError, match='Ariel search {0} could not be cancelled'
+    responses.add('POST', CANCEL_SEARCH, status=500)
+    with pytest.raises(ArielError,
+                       match='Ariel search {0} could not be cancelled: HTTP 500 was returned'
                        .format(SEARCH_ID)):
         ArielSearch().cancel(SEARCH_ID)
 
 @responses.activate
 def test_search_cancel_success():
-    responses.add('POST', CANCEL_SEARCH, status=200,
-                  json={'status': 'COMPLETED', 'search_id': SEARCH_ID})
-    status, search_id = ArielSearch().cancel(SEARCH_ID)
-
-    assert status == 'COMPLETED'
-    assert search_id == SEARCH_ID
+    responses.add('POST', CANCEL_SEARCH, status=200, json={'status': 'COMPLETED'})
+    assert ArielSearch().cancel(SEARCH_ID) == 'COMPLETED'
