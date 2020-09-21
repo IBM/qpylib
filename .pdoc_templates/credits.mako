@@ -1,0 +1,1 @@
+<span>This software is licensed under the <a href="https://github.com/IBM/qpylib/blob/master/LICENSE">Apache License 2.0</a></span>
