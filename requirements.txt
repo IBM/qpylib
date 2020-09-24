@@ -1,8 +1,9 @@
-flask
-requests
-pycryptodome
-cryptography
-responses
+Flask==1.1.1
+requests==2.22.0
+pycryptodome==3.9.6
+cryptography==2.8
+responses==0.10.15
 pylint==2.5.3
 pytest==5.4.3
 pytest-cov==2.10.0
+wheel==0.35.1
