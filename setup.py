@@ -25,11 +25,10 @@ def main():
         url="https://github.com/ibm/qpylib",
         packages=setuptools.find_packages(),
         install_requires=[
-            "flask>=1,<2",
-            "requests>=2,<3",
-            "pycryptodome>=3,<4",
-            "cryptography>=2,<3",
-            "responses>=0,<1"
+            "flask>=1.1,<2",
+            "requests>=2.22,<3",
+            "pycryptodome>=3.9,<4",
+            "cryptography>=2.8,<3"
         ],
         classifiers=[
             "Programming Language :: Python :: 3",
