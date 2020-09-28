@@ -10,7 +10,7 @@ addons:
   sonarcloud:
       organisation: "qradar-app-framework"
 
-script: 
+script:
   - ./lint.sh && ./test.sh
     # sonar scan skipped if build was triggered by create pull request or create tag or fork build.
     # this will only run once merged into the qpylib repository - not on forks/pull requests
@@ -28,7 +28,9 @@ after_success:
 deploy:
   provider: releases
   api_key: ${GITHUB_OAUTH_TOKEN}
-  file: dist/qpylib-${TRAVIS_TAG}.tar.gz
+  file:
+    - dist/qpylib-${TRAVIS_TAG}.tar.gz
+    - dist/qpylib-${TRAVIS_TAG}-py3-none-any.whl
   skip_cleanup: true
   on:
     tags: true
