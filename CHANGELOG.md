@@ -21,5 +21,5 @@ All `encdec` error-handling is now performed using `encdec.EncryptionError`.
 - New `ariel.py` module supports Ariel searches via REST API.
 - `get_app_id` now uses `QRADAR_APP_ID` environment variable instead of manifest value.
 - REST methods now pass through `kwargs`.
-- `REST` now uses `gethostname()` instead of `localhost`.
+- `REST` now uses `localhost` instead of `gethostname()`.
 - Functions with changed parameter names: `get_root_path`, `get_store_path`, `REST`.
