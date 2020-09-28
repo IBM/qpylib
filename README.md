@@ -15,7 +15,7 @@ Python 3 to run on Red Hat Universal Base Image. It is not compatible with apps
 written to run on a CentOS base image.
 
 Most functions are the equivalent of their pre-Github counterparts, although
-there may be some small differences in parameter names.
+there may be some small differences in parameter names and in error handling.
 
 ## Project details
 
