@@ -44,5 +44,5 @@ sufficient test coverage.
 
 ### Build
 
-The output of `build.sh` is a tar.gz file containing the qpylib Python package.
-You can use `pip install` to install the package into your Python 3 environment.
+The output of `build.sh` is a `tar.gz` file and a `.whl` file.
+You can take either file and use `pip install` to install qpylib as a package into your Python 3 environment.
