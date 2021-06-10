@@ -1,5 +1,8 @@
 # Changelog
 
+## 2.0.4
+- Update cryptography package version to address security vulnerabilities.
+
 ## 2.0.3
 - Freeze pip requirements.
 - Add wheel generation.
