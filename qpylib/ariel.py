@@ -11,7 +11,7 @@ class ArielError(Exception):
           aql: the AQL query, if applicable.
     '''
     def __init__(self, message, aql=None):
-        super(ArielError, self).__init__(message)
+        super().__init__(message)
         self.message = message
         self.aql = aql
 

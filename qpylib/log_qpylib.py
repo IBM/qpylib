@@ -43,6 +43,8 @@ LOG_LEVEL_TO_FUNCTION = None
 
 def create_log():
     global QLOGGER
+    if QLOGGER:
+        return
     QLOGGER = logging.getLogger('com.ibm.applicationLogger')
     QLOGGER.setLevel(_default_log_level())
     QLOGGER.addFilter(NotificationCodeFilter())
