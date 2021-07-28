@@ -11,17 +11,18 @@ from . import rest_qpylib
 
 # ==== Logging ====
 
-def create_log():
+def create_log(syslog_enabled=True):
     ''' Initialises logging.
         Threshold log level is set to the value of the "log_level" field
         in the app manifest.json, or INFO if that field is absent.
         Creates a file log handler which directs logs to store/log/app.log.
-        Creates a Syslog handler, but only if environment variables
-        QRADAR_CONSOLE_IP and QRADAR_APP_UUID are both set.
+        Creates a Syslog handler if syslog_enabled is True and only if
+        environment variables QRADAR_CONSOLE_IP and QRADAR_APP_UUID are
+        both set.
         Must be called before any call to log() or set_log_level().
         Raises ValueError if the manifest threshold log level is invalid.
     '''
-    log_qpylib.create_log()
+    log_qpylib.create_log(syslog_enabled)
 
 def log(message, level='INFO'):
     ''' Logs a message at the given level, which defaults to INFO.

@@ -41,7 +41,7 @@ SYSLOG_TIME_FORMAT = '%Y-%m-%dT%H:%M:%S%z'
 QLOGGER = None
 LOG_LEVEL_TO_FUNCTION = None
 
-def create_log():
+def create_log(syslog_enabled=True):
     global QLOGGER
     if QLOGGER:
         return
@@ -49,7 +49,7 @@ def create_log():
     QLOGGER.setLevel(_default_log_level())
     QLOGGER.addFilter(NotificationCodeFilter())
 
-    for handler in _generate_handlers():
+    for handler in _generate_handlers(syslog_enabled):
         QLOGGER.addHandler(handler)
 
     global LOG_LEVEL_TO_FUNCTION
@@ -83,21 +83,22 @@ def _default_log_level():
 def _log_file_location():
     return app_qpylib.get_log_path('app.log')
 
-def _generate_handlers():
+def _generate_handlers(syslog_enabled=True):
     handlers = []
 
     app_id = str(app_qpylib.get_app_id())
     handlers.append(_create_file_handler(app_id))
 
-    address = None
-    qradar_app_uuid = None
-    try:
-        address = _get_address_for_syslog()
-        qradar_app_uuid = app_qpylib.get_env_var('QRADAR_APP_UUID')
-    except KeyError:
-        pass
-    if address and qradar_app_uuid:
-        handlers.append(_create_syslog_handler(address, app_id, qradar_app_uuid))
+    if syslog_enabled:
+        address = None
+        qradar_app_uuid = None
+        try:
+            address = _get_address_for_syslog()
+            qradar_app_uuid = app_qpylib.get_env_var('QRADAR_APP_UUID')
+        except KeyError:
+            pass
+        if address and qradar_app_uuid:
+            handlers.append(_create_syslog_handler(address, app_id, qradar_app_uuid))
 
     return handlers
 
