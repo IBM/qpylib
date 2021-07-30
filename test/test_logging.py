@@ -111,11 +111,43 @@ def test_create_log_without_console_ip_skips_syslog_handler(set_app_uuid, info_t
     assert len(log_qpylib.QLOGGER.handlers) == 1
     assert isinstance(log_qpylib.QLOGGER.handlers[0], RotatingFileHandler)
 
+def test_create_log_without_console_ip_skips_syslog_handler_syslog_on(set_app_uuid, info_threshold, tmpdir):
+    log_path = os.path.join(tmpdir.strpath, 'app.log')
+    with patch('qpylib.log_qpylib._log_file_location') as mock_log_location:
+        mock_log_location.return_value = log_path
+        qpylib.create_log(True)
+    assert len(log_qpylib.QLOGGER.handlers) == 1
+    assert isinstance(log_qpylib.QLOGGER.handlers[0], RotatingFileHandler)
+
+def test_create_log_without_console_ip_skips_syslog_handler_syslog_off(set_app_uuid, info_threshold, tmpdir):
+    log_path = os.path.join(tmpdir.strpath, 'app.log')
+    with patch('qpylib.log_qpylib._log_file_location') as mock_log_location:
+        mock_log_location.return_value = log_path
+        qpylib.create_log(False)
+    assert len(log_qpylib.QLOGGER.handlers) == 1
+    assert isinstance(log_qpylib.QLOGGER.handlers[0], RotatingFileHandler)
+
 def test_create_log_without_qradar_app_uuid_skips_syslog_handler(set_console_ip, info_threshold, tmpdir):
     log_path = os.path.join(tmpdir.strpath, 'app.log')
     with patch('qpylib.log_qpylib._log_file_location') as mock_log_location:
         mock_log_location.return_value = log_path
         qpylib.create_log()
+    assert len(log_qpylib.QLOGGER.handlers) == 1
+    assert isinstance(log_qpylib.QLOGGER.handlers[0], RotatingFileHandler)
+
+def test_create_log_without_qradar_app_uuid_skips_syslog_handler_syslog_on(set_console_ip, info_threshold, tmpdir):
+    log_path = os.path.join(tmpdir.strpath, 'app.log')
+    with patch('qpylib.log_qpylib._log_file_location') as mock_log_location:
+        mock_log_location.return_value = log_path
+        qpylib.create_log(True)
+    assert len(log_qpylib.QLOGGER.handlers) == 1
+    assert isinstance(log_qpylib.QLOGGER.handlers[0], RotatingFileHandler)
+
+def test_create_log_without_qradar_app_uuid_skips_syslog_handler_syslog_off(set_console_ip, info_threshold, tmpdir):
+    log_path = os.path.join(tmpdir.strpath, 'app.log')
+    with patch('qpylib.log_qpylib._log_file_location') as mock_log_location:
+        mock_log_location.return_value = log_path
+        qpylib.create_log(False)
     assert len(log_qpylib.QLOGGER.handlers) == 1
     assert isinstance(log_qpylib.QLOGGER.handlers[0], RotatingFileHandler)
 
@@ -135,6 +167,34 @@ def test_create_log_all_handlers(mock_manifest, set_console_ip, set_app_uuid,
             check_rotating_file_handler_attrs(handler, log_path)
 
 @patch(MANIFEST_JSON_ROOT_PATH, return_value=manifest_path('installed.json'))
+def test_create_log_all_handlers_syslog_on(mock_manifest, set_console_ip, set_app_uuid,
+                                           info_threshold, tmpdir):
+    log_path = os.path.join(tmpdir.strpath, 'app.log')
+    with patch('qpylib.log_qpylib._log_file_location') as mock_log_location:
+        mock_log_location.return_value = log_path
+        qpylib.create_log(True)
+    assert log_qpylib.QLOGGER.getEffectiveLevel() == logging.INFO
+    assert len(log_qpylib.QLOGGER.handlers) == 2
+    for handler in log_qpylib.QLOGGER.handlers:
+        if isinstance(handler, SysLogHandler):
+            check_syslog_handler_attrs(handler)
+        if isinstance(handler, RotatingFileHandler):
+            check_rotating_file_handler_attrs(handler, log_path)
+
+@patch(MANIFEST_JSON_ROOT_PATH, return_value=manifest_path('installed.json'))
+def test_create_log_handlers_syslog_off(mock_manifest, set_console_ip, set_app_uuid,
+                                        info_threshold, tmpdir):
+    log_path = os.path.join(tmpdir.strpath, 'app.log')
+    with patch('qpylib.log_qpylib._log_file_location') as mock_log_location:
+        mock_log_location.return_value = log_path
+        qpylib.create_log(False)
+    assert log_qpylib.QLOGGER.getEffectiveLevel() == logging.INFO
+    assert len(log_qpylib.QLOGGER.handlers) == 1
+    for handler in log_qpylib.QLOGGER.handlers:
+        if isinstance(handler, RotatingFileHandler):
+            check_rotating_file_handler_attrs(handler, log_path)
+
+@patch(MANIFEST_JSON_ROOT_PATH, return_value=manifest_path('installed.json'))
 def test_create_log_called_twice(mock_manifest, set_console_ip, set_app_uuid,
                                  info_threshold, tmpdir):
     log_path = os.path.join(tmpdir.strpath, 'app.log')
@@ -143,6 +203,26 @@ def test_create_log_called_twice(mock_manifest, set_console_ip, set_app_uuid,
         qpylib.create_log()
         qpylib.create_log()
     assert len(log_qpylib.QLOGGER.handlers) == 2
+
+@patch(MANIFEST_JSON_ROOT_PATH, return_value=manifest_path('installed.json'))
+def test_create_log_called_twice_syslog_on(mock_manifest, set_console_ip, set_app_uuid,
+                                           info_threshold, tmpdir):
+    log_path = os.path.join(tmpdir.strpath, 'app.log')
+    with patch('qpylib.log_qpylib._log_file_location') as mock_log_location:
+        mock_log_location.return_value = log_path
+        qpylib.create_log(True)
+        qpylib.create_log(True)
+    assert len(log_qpylib.QLOGGER.handlers) == 2
+
+@patch(MANIFEST_JSON_ROOT_PATH, return_value=manifest_path('installed.json'))
+def test_create_log_called_twice_syslog_off(mock_manifest, set_console_ip, set_app_uuid,
+                                            info_threshold, tmpdir):
+    log_path = os.path.join(tmpdir.strpath, 'app.log')
+    with patch('qpylib.log_qpylib._log_file_location') as mock_log_location:
+        mock_log_location.return_value = log_path
+        qpylib.create_log(False)
+        qpylib.create_log(False)
+    assert len(log_qpylib.QLOGGER.handlers) == 1
 
 def check_rotating_file_handler_attrs(handler, log_path):
     assert handler.baseFilename == log_path
