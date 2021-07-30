@@ -168,7 +168,7 @@ def test_create_log_all_handlers(mock_manifest, set_console_ip, set_app_uuid,
 
 @patch(MANIFEST_JSON_ROOT_PATH, return_value=manifest_path('installed.json'))
 def test_create_log_all_handlers_syslog_on(mock_manifest, set_console_ip, set_app_uuid,
-                                 info_threshold, tmpdir):
+                                           info_threshold, tmpdir):
     log_path = os.path.join(tmpdir.strpath, 'app.log')
     with patch('qpylib.log_qpylib._log_file_location') as mock_log_location:
         mock_log_location.return_value = log_path
@@ -183,7 +183,7 @@ def test_create_log_all_handlers_syslog_on(mock_manifest, set_console_ip, set_ap
 
 @patch(MANIFEST_JSON_ROOT_PATH, return_value=manifest_path('installed.json'))
 def test_create_log_handlers_syslog_off(mock_manifest, set_console_ip, set_app_uuid,
-                                 info_threshold, tmpdir):
+                                        info_threshold, tmpdir):
     log_path = os.path.join(tmpdir.strpath, 'app.log')
     with patch('qpylib.log_qpylib._log_file_location') as mock_log_location:
         mock_log_location.return_value = log_path
@@ -206,7 +206,7 @@ def test_create_log_called_twice(mock_manifest, set_console_ip, set_app_uuid,
 
 @patch(MANIFEST_JSON_ROOT_PATH, return_value=manifest_path('installed.json'))
 def test_create_log_called_twice_syslog_on(mock_manifest, set_console_ip, set_app_uuid,
-                                 info_threshold, tmpdir):
+                                           info_threshold, tmpdir):
     log_path = os.path.join(tmpdir.strpath, 'app.log')
     with patch('qpylib.log_qpylib._log_file_location') as mock_log_location:
         mock_log_location.return_value = log_path
@@ -216,7 +216,7 @@ def test_create_log_called_twice_syslog_on(mock_manifest, set_console_ip, set_ap
 
 @patch(MANIFEST_JSON_ROOT_PATH, return_value=manifest_path('installed.json'))
 def test_create_log_called_twice_syslog_off(mock_manifest, set_console_ip, set_app_uuid,
-                                 info_threshold, tmpdir):
+                                            info_threshold, tmpdir):
     log_path = os.path.join(tmpdir.strpath, 'app.log')
     with patch('qpylib.log_qpylib._log_file_location') as mock_log_location:
         mock_log_location.return_value = log_path

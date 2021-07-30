@@ -83,7 +83,7 @@ def _default_log_level():
 def _log_file_location():
     return app_qpylib.get_log_path('app.log')
 
-def _generate_handlers(syslog_enabled=True):
+def _generate_handlers(syslog_enabled):
     handlers = []
 
     app_id = str(app_qpylib.get_app_id())
