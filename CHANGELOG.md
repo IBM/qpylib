@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.0.5
+- SDK rest calls now default to verify=True rather than verify=False.
+- Add protection against multiple calls of create_log().
+- Add create_log() flag to enable/disable SysLogHandler.
+
 ## 2.0.4
 - Update cryptography package version to address security vulnerabilities.
 
