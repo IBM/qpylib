@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 2.0.6
 - Fix missing `util_qpylib` missing from `qpylib` parent module.
 ## 2.0.5
 - SDK rest calls now default to verify=True rather than verify=False.
