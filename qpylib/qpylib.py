@@ -8,7 +8,8 @@ from . import json_qpylib
 from . import log_qpylib
 from . import offense_qpylib
 from . import rest_qpylib
-from . import util_qpylib
+# This is needed to allow accessing util_qpylib from the parent qpylib module
+from . import util_qpylib # pylint: disable=unused-import
 
 # ==== Logging ====
 
