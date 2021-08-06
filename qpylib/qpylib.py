@@ -8,6 +8,7 @@ from . import json_qpylib
 from . import log_qpylib
 from . import offense_qpylib
 from . import rest_qpylib
+from . import util_qpylib
 
 # ==== Logging ====
 
