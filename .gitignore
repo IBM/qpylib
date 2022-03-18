@@ -13,7 +13,6 @@
 build
 coverage.xml
 coverage-html
-dist
 qpylib.egg-info
 qpylib/version.py
 RemoteSystemsTempFiles

@@ -1,7 +1,7 @@
-Flask==1.1.1
+Flask==2.0.2
 requests==2.22.0
-pycryptodome==3.9.6
-cryptography==37.0.0
+pycryptodome==3.14.1
+cryptography==36.0.2
 responses==0.10.15
 pylint==2.6.0
 pytest==5.4.3
