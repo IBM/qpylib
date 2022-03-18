@@ -28,7 +28,7 @@ def main():
             "flask>=1.1,<2",
             "requests>=2.22,<3",
             "pycryptodome>=3.9,<4",
-            "cryptography>=2.8,<4"
+            "cryptography>=2.8,<40"
         ],
         classifiers=[
             "Programming Language :: Python :: 3",

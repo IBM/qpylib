@@ -1,5 +1,8 @@
 # Changelog
 
+## 2.0.7
+- Change requirements for `cryptography` package due to change their versioning system (see: https://cryptography.io/en/latest/changelog/#v35-0-0)
+
 ## 2.0.6
 - Fix missing `util_qpylib` missing from `qpylib` parent module.
 ## 2.0.5
