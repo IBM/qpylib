@@ -17,6 +17,7 @@ class Enginev2():
         Also, Crypto packages now come from pycryptodome, not pycrypto.
         Enginev2 uses AES/CFB encryption.
     '''
+    # pylint: disable=duplicate-code
     def __init__(self, config, app_uuid):
         ''' config should contain the following fields:
             salt, UUID, ivz, iterations.

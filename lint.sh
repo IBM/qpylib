@@ -3,5 +3,4 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-python -m pylint --version
 python -m pylint -r n --rcfile=.pylintrc qpylib test/*.py
