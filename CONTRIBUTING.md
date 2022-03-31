@@ -37,12 +37,18 @@ The `requirements.txt` file contains the Python packages needed to run these scr
 
 Pull requests will be accepted only if `lint.sh` produces no warnings or errors.
 
+`lint.sh` uses pylint to analyse the project's Python source code **and** unit tests.
+
 ### Test
 
 Pull requests will be accepted only if `test.sh` reports no test failures **and**
-sufficient test coverage.
+full test coverage.
+
+`test.sh` uses pytest and pytest-cov to execute the unit tests.
 
 ### Build
 
 The output of `build.sh` is a `tar.gz` file and a `.whl` file.
-You can take either file and use `pip install` to install qpylib as a package into your Python 3 environment.
+
+You can take either file and use `pip install` to install qpylib as a package
+into your Python 3 environment.
