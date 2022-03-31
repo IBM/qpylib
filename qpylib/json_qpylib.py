@@ -36,7 +36,6 @@ def _extract_and_register_jsonld_context(endpoint_direction, mime_id, body_id):
         pass
 
 def register_jsonld_type(jsonld_type, context):
-    global JSONLD_TYPES
     JSONLD_TYPES[str(jsonld_type)] = context
 
 def register_jsonld_type_from_context(context):
@@ -54,7 +53,6 @@ def _extract_type_from_context(context):
     return None
 
 def get_jsonld_type(jsonld_type):
-    global JSONLD_TYPES
     try:
         return JSONLD_TYPES[str(jsonld_type)]
     except KeyError:

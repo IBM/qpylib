@@ -10,6 +10,7 @@ from Crypto.Util.Padding import unpad
 class Enginev3():
     ''' Enginev3 uses a modified version of Enginev2's AES/CFB encryption.
     '''
+    # pylint: disable=duplicate-code
     def __init__(self, config, app_uuid):
         ''' config should contain the following fields:
             salt, UUID, ivz, iterations.

@@ -48,8 +48,8 @@ def set_log_level(level):
 # ==== App details ====
 
 def get_app_id():
-    ''' Returns the "app_id" value from the app manifest,
-        or 0 if app_id is not in the manifest.
+    ''' Returns the QRADAR_APP_ID value from the app container environment,
+        or 0 if QRADAR_APP_ID is not set.
     '''
     return app_qpylib.get_app_id()
 

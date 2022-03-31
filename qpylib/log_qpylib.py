@@ -63,7 +63,6 @@ def create_log(syslog_enabled=True):
     }
 
 def log(message, level):
-    global LOG_LEVEL_TO_FUNCTION
     if not LOG_LEVEL_TO_FUNCTION:
         raise RuntimeError('You cannot use log before logging has been initialised')
     log_function = LOG_LEVEL_TO_FUNCTION.get(level.upper())
@@ -72,7 +71,6 @@ def log(message, level):
     log_function(message)
 
 def set_log_level(level='INFO'):
-    global QLOGGER
     if not QLOGGER:
         raise RuntimeError('You cannot use set_log_level before logging has been initialised')
     QLOGGER.setLevel(level.upper())

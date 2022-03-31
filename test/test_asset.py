@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 #
-# pylint: disable=unused-argument, redefined-outer-name
+# pylint: disable=unused-argument, redefined-outer-name, duplicate-code
 
 import os
 import pytest

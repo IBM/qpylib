@@ -4,13 +4,15 @@
 
 dist: xenial
 language: python
-python: 3.7.2
+python: 3.8.7
 
 addons:
   sonarcloud:
       organisation: "qradar-app-framework"
 
 script:
+  - python -m pip install --upgrade pip
+  - python -m pip list
   - ./lint.sh && ./test.sh
     # sonar scan skipped if build was triggered by create pull request or create tag or fork build.
     # this will only run once merged into the qpylib repository - not on forks/pull requests
