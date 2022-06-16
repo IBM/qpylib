@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # Generate an HTML coverage report only if the tests are being run locally
-# and not on travis-ci.
+# and not on the CI.
 GENERATE_HTML_REPORT=
 
 if [ "$CI" == "true" ]
