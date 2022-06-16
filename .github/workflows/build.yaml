@@ -1,0 +1,38 @@
+name: build
+on:
+  push:
+  pull_request:
+  release:
+    types: [created]
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.8.7'
+      - uses: actions/checkout@v1
+      - name: Install Python dependencies
+        run: python -m pip install --upgrade pip && python -m pip list
+      - name: Lint
+        run: ./lint.sh
+      - name: Test
+        run: ./test.sh
+      - name: SonarQube scan
+        if: github.event_name != 'push' && github.repository == 'IBM/qpylib'
+        uses: sonarsource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      - name: Build
+        env:
+          BUILD_IDENTIFIER: "${{ github.event_name == 'release' && github.ref_name || format('0.0.dev{0}', github.sha) }}"
+        run: ./build.sh "$BUILD_IDENTIFIER"
+      - name: Deploy
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            dist/qpylib-${{github.ref_name}}.tar.gz
+            dist/qpylib-${{github.ref_name}}-py3-none-any.whl
