@@ -25,7 +25,7 @@ Using the SPDX format is the simplest approach. See existing source files for an
 ## Development
 
 On your local machine you can lint, test and build in mostly
-the same way that Travis CI does. There are three scripts you can use:
+the same way that the CI does. There are three scripts you can use:
 
 * `lint.sh`
 * `test.sh`
