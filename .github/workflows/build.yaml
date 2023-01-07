@@ -20,7 +20,7 @@ jobs:
       - name: Test
         run: ./test.sh
       - name: SonarQube scan
-        if: github.event_name != 'release' && github.repository == 'IBM/qpylib'
+        if: github.event_name == 'push' && github.repository == 'IBM/qpylib'
         uses: sonarsource/sonarcloud-github-action@master
         env:
           GITHUB_TOKEN: ${{ github.token }}
