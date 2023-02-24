@@ -140,7 +140,7 @@ def test_q_url_for(mock_flask_url_for, env_qradar_console_ip, env_qradar_app_id)
     assert qpylib.q_url_for('index') == 'https://9.123.234.101/console/plugins/1005/app_proxy/index'
 
 def test_get_endpoint_url():
-    with pytest.raises(RuntimeError, match='Attempted to generate a URL without the application context'):
+    with pytest.raises(RuntimeError, match='application context'):
         app_qpylib.get_endpoint_url('dummyurl')
 
 # ==== get_console_address ====
