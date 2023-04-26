@@ -1,0 +1,5 @@
+[run]
+omit=qpylib/__init__.py
+
+[report]
+fail_under=100

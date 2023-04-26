@@ -28,6 +28,8 @@ def create_log(syslog_enabled=True):
 
 def log(message, level='INFO'):
     ''' Logs a message at the given level, which defaults to INFO.
+        Within the message string, any control characters such as tab
+        and newline will be suppressed.
         Level values: DEBUG, INFO, WARNING, ERROR, EXCEPTION, CRITICAL.
         EXCEPTION is ERROR plus extra exception details.
         Raises RuntimeError if logging was not previously initialised
