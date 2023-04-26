@@ -68,7 +68,7 @@ def log(message, level):
     log_function = LOG_LEVEL_TO_FUNCTION.get(level.upper())
     if not log_function:
         raise ValueError("Unknown level: '{0}'".format(level))
-    log_function(message)
+    log_function(_sanitize(message))
 
 def set_log_level(level='INFO'):
     if not QLOGGER:
@@ -80,6 +80,10 @@ def _default_log_level():
 
 def _log_file_location():
     return app_qpylib.get_log_path('app.log')
+
+def _sanitize(message):
+    # Use repr to suppress \t, \n, \r, and strip the surrounding quotes added by repr.
+    return repr(message)[1:-1]
 
 def _generate_handlers(syslog_enabled):
     handlers = []

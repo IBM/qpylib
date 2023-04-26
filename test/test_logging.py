@@ -293,6 +293,15 @@ def test_log_with_bad_level_raises_error(info_threshold, tmpdir):
         with pytest.raises(ValueError, match="Unknown level: 'BAD'"):
             qpylib.log('hello', 'BAD')
 
+def test_message_with_control_chars(info_threshold, tmpdir):
+    log_path = os.path.join(tmpdir.strpath, 'app.log')
+    with patch('qpylib.log_qpylib._log_file_location') as mock_log_location:
+        mock_log_location.return_value = log_path
+        qpylib.create_log()
+        qpylib.log('This \r should all \n be on %0a one \t line')
+    verify_log_file_content(log_path, [
+        {'level': 'INFO', 'text': 'This \\r should all \\n be on %0a one \\t line'}])
+
 def test_all_log_levels_with_manifest_info_threshold(info_threshold, tmpdir):
     log_path = os.path.join(tmpdir.strpath, 'app.log')
     with patch('qpylib.log_qpylib._log_file_location') as mock_log_location:
