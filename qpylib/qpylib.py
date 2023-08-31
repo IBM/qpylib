@@ -110,9 +110,11 @@ def get_console_fqdn():
 
 # ==== REST ====
 
+QREST_TIMEOUT = rest_qpylib.resolve_default_timeout()
+
 # pylint: disable=invalid-name, too-many-arguments
 def REST(rest_action, request_url, version=None, headers=None, data=None,
-         params=None, json_body=None, verify=True, timeout=60, **kwargs):
+         params=None, json_body=None, verify=True, timeout=QREST_TIMEOUT, **kwargs):
     ''' Invokes a rest_action request to request_url using the Python requests module.
         Returns a requests.Response object.
         Raises ValueError if rest_action is not one of GET, PUT, POST, DELETE.
