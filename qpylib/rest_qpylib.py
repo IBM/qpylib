@@ -8,12 +8,11 @@ from flask import request, has_request_context
 import requests
 from . import app_qpylib
 
-# pylint: disable=too-many-arguments
-
 QRADAR_CSRF = 'QRadarCSRF'
 SEC_HEADER = 'SEC'
 SEC_ADMIN_TOKEN = 'SEC_ADMIN_TOKEN'
 
+# pylint: disable=too-many-arguments
 def rest(rest_action, request_url, version, headers, data,
          params, json_body, verify, timeout, **kwargs):
     rest_func = _choose_rest_function(rest_action)
@@ -22,6 +21,14 @@ def rest(rest_action, request_url, version, headers, data,
     proxies = _add_proxies()
     return rest_func(full_url, headers=rest_headers, data=data, params=params,
                      json=json_body, verify=verify, timeout=timeout, proxies=proxies, **kwargs)
+
+def resolve_default_timeout():
+    # pylint: disable=broad-exception-caught
+    try:
+        with open(app_qpylib.get_store_path('rest-timeout-override')) as override_file:
+            return int(override_file.readline().strip())
+    except Exception:
+        return 60
 
 def _add_headers(headers, version=None):
     if headers is None:

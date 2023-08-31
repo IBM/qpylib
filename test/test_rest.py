@@ -10,7 +10,7 @@ from flask import Flask
 import pytest
 import responses
 from werkzeug import http
-from qpylib import qpylib
+from qpylib import qpylib, rest_qpylib
 
 @pytest.fixture(scope='module', autouse=True)
 def pre_testing_setup():
@@ -112,3 +112,39 @@ def test_rest_allows_delete(env_qradar_console_fqdn):
 def test_rest_rejects_unsupported_method(env_qradar_console_fqdn):
     with pytest.raises(ValueError, match='Unsupported REST action was requested'):
         qpylib.REST('PATCH', 'testing_endpoint', verify='dummycert', headers={'Host': '127.0.0.1'})
+
+@responses.activate
+def test_rest_uses_default_timeout(env_qradar_console_fqdn):
+    responses.add('GET', 'https://myhost.ibm.com/testing_endpoint', status=200,
+                  match=[responses.matchers.request_kwargs_matcher({"timeout": 60})])
+    qpylib.REST('GET', 'testing_endpoint', verify='dummycert', headers={'Host': '127.0.0.1'})
+
+@responses.activate
+def test_rest_uses_supplied_timeout(env_qradar_console_fqdn):
+    responses.add('GET', 'https://myhost.ibm.com/testing_endpoint', status=200,
+                  match=[responses.matchers.request_kwargs_matcher({"timeout": 90})])
+    qpylib.REST('GET', 'testing_endpoint', verify='dummycert', headers={'Host': '127.0.0.1'}, timeout=90)
+
+def test_timeout_no_override():
+    assert rest_qpylib.resolve_default_timeout() == 60
+
+def create_timeout_file(dir_path, file_content):
+    override_filepath = os.path.join(dir_path, 'rest-timeout-override')
+    with open(override_filepath, 'w') as _:
+        _.write(file_content)
+    return override_filepath
+
+def test_timeout_good_override(tmpdir):
+    override_filepath = create_timeout_file(tmpdir.strpath, '120\n')
+    with patch('qpylib.app_qpylib.get_store_path', return_value = override_filepath):
+        assert rest_qpylib.resolve_default_timeout() == 120
+
+def test_timeout_good_override_with_whitespace(tmpdir):
+    override_filepath = create_timeout_file(tmpdir.strpath, '\t90   ')
+    with patch('qpylib.app_qpylib.get_store_path', return_value = override_filepath):
+        assert rest_qpylib.resolve_default_timeout() == 90
+
+def test_timeout_bad_override(tmpdir):
+    override_filepath = create_timeout_file(tmpdir.strpath, 'invalid')
+    with patch('qpylib.app_qpylib.get_store_path', return_value = override_filepath):
+        assert rest_qpylib.resolve_default_timeout() == 60
