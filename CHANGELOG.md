@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.0.9
+- Add override for `qpylib.REST` default timeout.
+
+## 2.0.8
+- `qpylib.log` now sanitizes the supplied `message` text to suppress any embedded control characters.
+
+## 2.0.7
+- Update dependency versions.
+
 ## 2.0.6
 - Fix missing `util_qpylib` missing from `qpylib` parent module.
 
