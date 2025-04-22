@@ -1,6 +1,7 @@
 # Copyright 2019 IBM Corporation All Rights Reserved.
 #
 # SPDX-License-Identifier: Apache-2.0
+import time
 
 from . import app_qpylib
 from . import asset_qpylib
@@ -123,6 +124,65 @@ def REST(rest_action, request_url, version=None, headers=None, data=None,
                             params, json_body, verify, timeout, **kwargs)
 
 # ==== JSON ====
+
+def fetch_paginated_data(url, chunk_size=50, offset=0, headers=None, **kwargs):
+    """
+    Generator function to fetch paginated data from Qradar API endpoints using HTTP Range headers
+    :param url: Qradar Get API endpoint
+    :param chunk_size: Pagination size(limit per page)
+    :param offset: Allows to Skip few results from beginning
+    :param headers: Extra headers to pass in API call
+    :param kwargs: Additional keyword arguments accepted by qpylib.REST method
+    :yields:
+        dict: A dictionary containing:
+            - "data": list of records returned from the API
+            - "status_code": status code of API call
+            - "error": error details if failed
+            - "headers": response headers from the API call
+            - "duration": Time taken to complete the API call (in seconds)
+     Notes:
+        - The function handles pagination by incrementing the range header until all records are fetched.
+        - It stops fetching once the total number of records (parsed from response headers) is reached.
+        - Expects the server to support HTTP Range requests and respond with status between 200-206
+    """
+    start = offset
+    total = None
+    headers = headers or {}
+
+    while True:
+        end = start + chunk_size - 1
+        range_value = f"items={start}-{end}"
+        request_headers = {**headers, "Range": range_value}
+
+        start_time = time.time()
+        response = REST('GET', url, headers=request_headers, **kwargs)
+        duration = time.time() - start_time
+
+        return_data = {'data': [], 'status_code': response.status_code,  "headers": response.headers, "error": None, "duration": round(duration, 3) }
+
+        if response.status_code not in [200, 206]:
+            return_data['error'] = response.content
+            yield return_data
+            break
+
+        return_data['data'] = response.json()
+        yield return_data
+
+        # Parse total count from response headers
+        content_range = response.headers.get("Content-Range")
+
+        if not content_range:
+            raise ValueError("Missing 'Content-Range' header in response")
+
+        try:
+            total_str = content_range.split("/")[-1]
+            total = int(total_str)
+        except Exception as e:
+            raise ValueError("Failed to parse content range header: {0}".format(e))
+
+        start = end + 1
+        if total is not None and start >= total:
+            break
 
 def to_json_dict(python_obj, classkey=None):
     """ Converts a Python object into a dict usable with the REST function.
